@@ -1,0 +1,31 @@
+## [ Visual Studio Configuration ]
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+## [ NuGet Packages ]
+*.nupkg
+packages/
+
+## [ Built outputs ]
+*.exe
+*.dll
+*.pdb
+*.suo
+
+## [ Operating System Files ]
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## [ Database files - IMPORTANT ]
+
+*.mdf
+*.ldf
+
+## [ Temporary Files ]
+*.log
+*.tmp
