@@ -19,19 +19,19 @@
 
 | شاشة الدخول | شاشة الخزينة |
 | :---: | :---: |
-| ![Login Screen](F:\Mohamed sabry app\Auto Parts Store\ScreenShots\Login.png) | ![Safe Screen](F:\Mohamed sabry app\Auto Parts Store\ScreenShots\Safe.png) |
+| ![Login Screen](./ScreenShots/Login.png) | ![Safe Screen](./ScreenShots/Safe.png) |
 
-| ![Main Screen](F:\Mohamed sabry app\Auto Parts Store\ScreenShots\Main.png) | ![Customers and suppliers Screen](F:\Mohamed sabry app\Auto Parts Store\ScreenShots\Cusomers and suppliers Page.png) |
+| ![Main Screen](./ScreenShots/Main.png) | ![CusTomers and suppliers Screen](./ScreenShots/Cusomers-and-suppliers-Page.png) |
 
-| ![buying Screen](F:\Mohamed sabry app\Auto Parts Store\ScreenShots\Maibuying Page.png) | ![Inventory Screen](F:\Mohamed sabry app\Auto Parts Store\ScreenShots\Inventory Page.png) |
+| ![buying Screen](./ScreenShots/buying-Page.png) | ![Inventory Screen](./ScreenShots/Inventory-Page.png) |
 
-| ![Selling  Page Screen](F:\Mohamed sabry app\Auto Parts Store\ScreenShots\Maibuying Page.png) |
+| ![Selling Screen](./ScreenShots/InventorySelling-Page.png) |
 
 
 ---
 
 ## 🛠️ التقنيات المستخدمة (Tech Stack)
-
+x   
 * **اللغة:** C#
 * **المنصة:** .NET Framework (WinForms)
 * **قاعدة البيانات:** SQL Server
