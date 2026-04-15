@@ -253,7 +253,7 @@ namespace Auto_Parts_Store
              {
                  PartID = (int)row.Cells["CID"].Value,
                  Quantity = Convert.ToDecimal(row.Cells["CQty"].Value),
-                 PartPrice = Convert.ToDecimal(row.Cells["CPrice"].Value),
+                 SellingPrice = Convert.ToDecimal(row.Cells["CPrice"].Value),
                  Total = Convert.ToDecimal(row.Cells["CTotal"].Value)
              }).ToList();
 

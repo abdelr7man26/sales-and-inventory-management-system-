@@ -107,10 +107,12 @@
     </Compile>
     <Compile Include="Repositories\IPartRepository.cs" />
     <Compile Include="Repositories\IPersonRepository.cs" />
+    <Compile Include="Repositories\IPurshesesRepository.cs" />
     <Compile Include="Repositories\ISafeRepository.cs" />
     <Compile Include="Repositories\ISalesRepository.cs" />
     <Compile Include="Repositories\PartRepository.cs" />
     <Compile Include="Repositories\PersonRepository.cs" />
+    <Compile Include="Repositories\purchasesRepository.cs" />
     <Compile Include="Repositories\SafeRepository.cs" />
     <Compile Include="Repositories\SalesRepository.cs" />
     <Compile Include="SellingForm.cs">

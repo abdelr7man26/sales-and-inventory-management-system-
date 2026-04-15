@@ -33,6 +33,10 @@ namespace Auto_Parts_Store.Repositories
 
         Task<string> GetPartNumberAsync();
 
-
+        Task<DataTable> GetPartsForAutoCompleteAsync();
+        Task<int> GetPartIdByNameAsync(string partName);
+        Task<AutoPart> GetPartByNumberAsync(string partNumber);
+        Task<bool> IsPartNumberExistsAsync(string partNumber);
+        Task<AutoPart> GetPartByNameAsync(string partName);
     }
 }

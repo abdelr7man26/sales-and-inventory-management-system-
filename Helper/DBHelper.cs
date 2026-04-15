@@ -51,6 +51,18 @@ namespace Auto_Parts_Store.Helpers
                 return await cmd.ExecuteScalarAsync();
             }
         }
+        public static async Task<object> ExecuteScalarAsync(string query, params SqlParameter[] parameters)
+        {
+            using (SqlConnection con = new SqlConnection(connectionString))
+            using (SqlCommand cmd = new SqlCommand(query, con))
+            {
+                if (parameters != null)
+                    cmd.Parameters.AddRange(parameters);
+
+                await con.OpenAsync();
+                return await cmd.ExecuteScalarAsync();
+            }
+        }
 
         public static SqlConnection GetConnection()
         {

@@ -163,5 +163,67 @@ namespace Auto_Parts_Store.Repositories
             var result = await DbHelper.ExecuteScalarAsync("SELECT COALESCE(MAX(TRY_CAST(PartNumber AS INT)), 1000) + 1 FROM Parts");
             return result?.ToString() ?? "1001";
         }
+        public async Task<DataTable> GetPartsForAutoCompleteAsync()
+        {
+            string sql = "SELECT PartName, PartNumber FROM Parts WHERE IsDeleted = 0";
+            return await DbHelper.ExecuteQueryAsync(sql);
+        }
+
+        public async Task<int> GetPartIdByNameAsync(string partName)
+        {
+            string query = "SELECT PartID FROM Parts WHERE PartName = @name AND IsDeleted = 0";
+
+            object result = await DbHelper.ExecuteScalarAsync(query, new SqlParameter("@name", partName.Trim()));
+            return result != null ? Convert.ToInt32(result) : 0;
+        }
+
+
+        public async Task<AutoPart> GetPartByNumberAsync(string partNumber)
+        {
+            string query = "SELECT PartID, PartName, CategoryID, PurchasePrice FROM Parts WHERE PartNumber = @num AND IsDeleted = 0";
+
+            DataTable dt = await DbHelper.ExecuteQueryAsync(query, new SqlParameter("@num", partNumber.Trim()));
+
+            if (dt.Rows.Count > 0)
+            {
+                DataRow dr = dt.Rows[0];
+                return new AutoPart
+                {
+                    PartID = Convert.ToInt32(dr["PartID"]),
+                    PartName = dr["PartName"].ToString(),
+                    CategoryID = Convert.ToInt32(dr["CategoryID"]),
+                    PurchasePrice = Convert.ToDecimal(dr["PurchasePrice"])
+                };
+            }
+            return null;
+        }
+
+        public async Task<bool> IsPartNumberExistsAsync(string partNumber)
+        {
+            string query = "SELECT COUNT(1) FROM Parts WHERE PartNumber = @num AND IsDeleted = 0";
+            object result = await DbHelper.ExecuteScalarAsync(query, new SqlParameter("@num", partNumber.Trim()));
+            return Convert.ToInt32(result) > 0;
+        }
+
+        public async Task<AutoPart> GetPartByNameAsync(string partName)
+        {
+            string query = "SELECT PartID, PartNumber, CategoryID, PurchasePrice FROM Parts WHERE PartName = @name AND IsDeleted = 0";
+
+            DataTable dt = await DbHelper.ExecuteQueryAsync(query, new SqlParameter("@name", partName.Trim()));
+
+            if (dt.Rows.Count > 0)
+            {
+                DataRow dr = dt.Rows[0];
+                return new AutoPart
+                {
+                    PartID = Convert.ToInt32(dr["PartID"]),
+                    PartName = partName, 
+                    PartNumber = dr["PartNumber"].ToString(),
+                    CategoryID = Convert.ToInt32(dr["CategoryID"]),
+                    PurchasePrice = Convert.ToDecimal(dr["PurchasePrice"])
+                };
+            }
+            return null;
+        }
     }
 }

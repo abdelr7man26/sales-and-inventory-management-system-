@@ -60,5 +60,48 @@ namespace Auto_Parts_Store.Helpers
             if (!string.IsNullOrWhiteSpace(person.Phone) && !person.Phone.All(char.IsDigit))
                 throw new Exception("رقم التليفون يجب أن يحتوي على أرقام فقط");
         }
+
+        public static bool ValidatePurchaseInput(string partName, string partNumber, string priceText, decimal quantity, int categoryIndex, int supplierIndex, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(partName))
+            {
+                errorMessage = "من فضلك تأكد من كتابة اسم القطعة!";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(partNumber))
+            {
+                errorMessage = "من فضلك تأكد من كتابة رقم القطعة.";
+                return false;
+            }
+
+            if (!decimal.TryParse(priceText, out decimal buyPrice) || buyPrice <= 0)
+            {
+                errorMessage = "سعر الشراء غير صحيح! دخل رقم أكبر من صفر.";
+                return false;
+            }
+
+            if (quantity <= 0)
+            {
+                errorMessage = "الكمية لازم تكون 1 على الأقل.";
+                return false;
+            }
+
+            if (categoryIndex <= 0)
+            {
+                errorMessage = "من فضلك اختار فئة القطعة.";
+                return false;
+            }
+
+            if (supplierIndex == -1)
+            {
+                errorMessage = "من فضلك اختر المورد أولاً!";
+                return false;
+            }
+
+            return true;
+        }
     }
 }

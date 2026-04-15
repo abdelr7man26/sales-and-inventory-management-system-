@@ -127,7 +127,7 @@ namespace Auto_Parts_Store.Repositories
 
                 new SqlParameter("@qty", SqlDbType.Int) { Value = item.Quantity },
 
-                new SqlParameter("@price", SqlDbType.Decimal) { Value = item.PartPrice },
+                new SqlParameter("@price", SqlDbType.Decimal) { Value = item.SellingPrice },
 
                 new SqlParameter("@total", SqlDbType.Decimal) { Value = item.Total },
 

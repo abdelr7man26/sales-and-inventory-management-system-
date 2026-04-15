@@ -17,6 +17,8 @@ namespace Auto_Parts_Store
         private readonly IPartRepository _repo;
         private readonly ISafeRepository _safe = new SafeRepository();
         private readonly ISalesRepository _salesRepo = new SalesRepository();
+        private readonly IPersonRepository _PersonRepo = new PersonRepository(); 
+        private readonly IPurchasesRepository _purchasesRepo  = new PurchasesRepository();
 
         private readonly AuthService _authService;
         private Form activeForm = null;
@@ -160,7 +162,7 @@ namespace Auto_Parts_Store
 
         private void Purshesbtn_Click(object sender, EventArgs e)
         {
-            openChildForm(new PurshesesForm());
+            openChildForm(new PurshesesForm(_repo, _PersonRepo, _purchasesRepo, _safe));
         }
 
         private void clientsbtn_Click(object sender, EventArgs e)

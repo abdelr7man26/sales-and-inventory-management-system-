@@ -26,6 +26,20 @@ namespace Auto_Parts_Store.Helpers
             dgv.AllowUserToDeleteRows = false;
             dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+
+        }
+        public static void AddIdColumn(this DataGridView dgv)
+        {
+            if (!dgv.Columns.Contains("ID_Col"))
+            {
+                DataGridViewTextBoxColumn idCol = new DataGridViewTextBoxColumn();
+                idCol.Name = "ID_Col";
+                idCol.HeaderText = "م";
+                idCol.ReadOnly = true;
+                idCol.Width = 40;
+                idCol.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                dgv.Columns.Insert(0, idCol);
+            }
         }
     }
 }

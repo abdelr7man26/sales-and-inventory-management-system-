@@ -1,16 +1,20 @@
-﻿using Auto_Parts_Store.Models;
+﻿using Auto_Parts_Store.Helpers;
+using Auto_Parts_Store.Models;
 using Auto_Parts_Store.Repositories;
 using Auto_Parts_Store.Services;
 using System;
-
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
-
 using System.Data.SqlClient;
-
 using System.Drawing;
-
+using System.IO.Ports;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using System.Xml.Linq;
 
 
 namespace Auto_Parts_Store
@@ -23,14 +27,24 @@ namespace Auto_Parts_Store
 
         string connString = @"Server=DESKTOP-21OI6J7; Database=AutoPartsStoreDB; Integrated Security=True;";
 
+        private readonly IPartRepository _partRepo;
+        private readonly IPersonRepository _personRepo;
+        private readonly IPurchasesRepository _purchasesRepository;
+        private readonly ISafeRepository _safeRepo;
+
+
         decimal calculatedSellingPrice = 0;
         int currentPartID = 0;
 
-        public PurshesesForm()
+        public PurshesesForm(IPartRepository partRepo, IPersonRepository personRepo, IPurchasesRepository purchasesRepository ,ISafeRepository saferepo)
 
         {
 
             InitializeComponent();
+            _partRepo = partRepo ?? throw new ArgumentNullException(nameof(partRepo));
+            _personRepo = personRepo ?? throw new ArgumentNullException(nameof(personRepo));
+            _purchasesRepository = purchasesRepository ?? throw new ArgumentNullException(nameof(purchasesRepository));
+            _safeRepo = saferepo ?? throw new ArgumentNullException(nameof(saferepo));
 
             this.KeyPreview = true;
 
@@ -39,248 +53,203 @@ namespace Auto_Parts_Store
 
 
         }
-
-
-
-        private void PurshesesForm_Load(object sender, EventArgs e)
-
+        private async void PurshesesForm_Load(object sender, EventArgs e)
         {
 
-            LoadSuppliers();
-
-            LoadCategories();
-
-            EnableAutoComplete();
+            await Task.WhenAll(
+            LoadSuppliersAsync(),
+            LoadCategoriesAsync(),
+            EnableAutoCompleteAsync()
+            );
+          
             SetupGrid();
-
             ClearInputFields();
+            
             txtPartName.Focus();
             if (paymentmethod.Items.Count > 0)
             {
                 paymentmethod.SelectedIndex = 0; 
             }
+        }
 
+        private void PostAddCleanup()
+        {
+            dgvPurshes.ClearSelection();
+
+            if (dgvPurshes.Rows.Count > 0)
+            {
+                int lastIndex = dgvPurshes.Rows.Count - 1;
+                dgvPurshes.Rows[lastIndex].Selected = true;
+                dgvPurshes.FirstDisplayedScrollingRowIndex = lastIndex;
+            }
+
+            Add.Text = "إضافة للفاتورة";
+            Add.BackColor = Color.ForestGreen;
+
+            UpdateFinalTotals();
+            ClearInputFields();
+            RenumberRows();
+            txtPartName.Focus();
+        }
+        void UpdateFinalTotals()
+        {
+            decimal finalTotal = dgvPurshes.Rows.Cast<DataGridViewRow>()
+            .Where(r => r.Cells["TotalCol"].Value != null)
+            .Sum(r => Convert.ToDecimal(r.Cells["TotalCol"].Value));
+
+            totallbl.Text = finalTotal.ToString("N2");
+
+            decimal.TryParse(Paid.Text, out decimal paid);
+            decimal remainder = finalTotal - paid;
+
+            Remaining.Text = remainder.ToString("N2");
+
+            Remaining.ForeColor = remainder > 0 ? Color.Red : Color.ForestGreen;
+            Remaining.Font = new Font(Remaining.Font, remainder > 0 ? FontStyle.Bold : FontStyle.Regular);
+
+        }
+        void ClearInputFields()
+        {
+            txtPartName.Clear();
+            txtPartNumber.Clear();
+            txtPurchasePrice.Text = "0.00";
+
+            calculatedSellingPrice = 0;
+            currentPartID = 0;
+            Quantity.Value = 1;
+
+            if (cmbCategories.Items.Count > 0)
+                cmbCategories.SelectedIndex = 0;
+
+            notestxt.Clear();
+            txtPartName.Focus();
+        }
+        private void ResetFormAfterSave()
+        {
+            dgvPurshes.Rows.Clear();
+
+            Paid.Text = "0.00";
+            totallbl.Text = "0.00";
+            Remaining.Text = "0.00";
+            Remaining.ForeColor = Color.Green;
+
+            if (supplierscmb.Items.Count > 0)
+                supplierscmb.SelectedIndex = 0;
+
+            if (paymentmethod.Items.Count > 0)
+                paymentmethod.SelectedIndex = 0;
+
+            ClearInputFields();
+
+            txtPartName.Focus();
         }
 
 
 
         #region Loading Data
-
-        void LoadSuppliers()
-
-        {
-
+        private async Task LoadSuppliersAsync()
+        {      
             try
-
             {
+                DataTable dt = await _personRepo.GetAllPersonsAsync(PersonType.Supplier);
 
-                using (SqlConnection con = new SqlConnection(connString))
-
+                DataRow[] generalSupplier = dt.Select("ID = 9");
+                foreach (DataRow row in generalSupplier)
                 {
-
-                    string sql = "SELECT s.ID, p.PersonName FROM supplieres s JOIN person p ON s.ID = p.ID where p.isdeleted = 0 AND s.ID <> 9 ";
-
-                    SqlDataAdapter da = new SqlDataAdapter(sql, con);
-
-                    DataTable dt = new DataTable();
-
-                    da.Fill(dt);
-
-
-
-                    DataRow dr = dt.NewRow();
-
-                    dr["ID"] = 0;
-
-                    dr["PersonName"] = "مورد نقدي / عام";
-
-                    dt.Rows.InsertAt(dr, 0);
-
-
-
-                    supplierscmb.DataSource = dt;
-
-                    supplierscmb.DisplayMember = "PersonName";
-
-                    supplierscmb.ValueMember = "ID";
-
-                    supplierscmb.SelectedValue = -1;
-
+                    dt.Rows.Remove(row);
                 }
 
+                DataRow dr = dt.NewRow();
+                dr["ID"] = 0;
+                dr["الأسم"] = "مورد نقدي / عام"; 
+                dt.Rows.InsertAt(dr, 0);
+
+                supplierscmb.DataSource = dt;
+                supplierscmb.DisplayMember = "الأسم"; 
+                supplierscmb.ValueMember = "ID";
+                supplierscmb.SelectedValue = -1;
             }
-
             catch (Exception ex)
-
             {
-
                 MessageBox.Show("خطأ في تحميل الموردين: " + ex.Message);
-
             }
 
         }
-
-
-
-        void LoadCategories()
+        private async Task LoadCategoriesAsync()
 
         {
 
             try
-
             {
+                // سحب الفئات من الـ Repo
+                DataTable dt = await _partRepo.GetAllCategoriesAsync();
 
-                using (SqlConnection con = new SqlConnection(connString))
+                DataRow dr = dt.NewRow();
+                dr["categoryID"] = 0;
+                dr["categoryName"] = "--- اختر فئة القطعة ---";
+                dt.Rows.InsertAt(dr, 0);
 
-                {
-
-                    string sql = "SELECT categoryID, categoryName FROM partscategories WHERE IsDeleted = 0";
-
-                    SqlDataAdapter da = new SqlDataAdapter(sql, con);
-
-                    DataTable dt = new DataTable();
-
-                    da.Fill(dt);
-
-
-
-                    DataRow dr = dt.NewRow();
-
-                    dr["categoryID"] = 0;
-
-                    dr["categoryName"] = "--- اختر فئة القطعة ---";
-
-                    dt.Rows.InsertAt(dr, 0);
-
-
-
-                    cmbCategories.DataSource = dt;
-
-                    cmbCategories.DisplayMember = "categoryName";
-
-                    cmbCategories.ValueMember = "categoryID";
-
-
-
-
-                    cmbCategories.SelectedIndex = 0;
-
-                }
-
+                cmbCategories.DataSource = dt;
+                cmbCategories.DisplayMember = "categoryName";
+                cmbCategories.ValueMember = "categoryID";
+                cmbCategories.SelectedIndex = 0;
             }
-
             catch (Exception ex)
-
             {
-
                 MessageBox.Show("خطأ في تحميل الفئات: " + ex.Message);
-
             }
 
         }
-
-
-
-        void EnableAutoComplete()
-
+        private async Task EnableAutoCompleteAsync()
         {
-
-
-            AutoCompleteStringCollection namesData = new AutoCompleteStringCollection();
-
-            AutoCompleteStringCollection numbersData = new AutoCompleteStringCollection();
-
-
-
-            using (SqlConnection con = new SqlConnection(connString))
-
+            try
             {
+                DataTable dt = await _partRepo.GetPartsForAutoCompleteAsync();
 
-                SqlCommand cmd = new SqlCommand("SELECT PartID, PartName, PartNumber FROM Parts where isDeleted =0 ", con);
+                AutoCompleteStringCollection namesData = new AutoCompleteStringCollection();
+                AutoCompleteStringCollection numbersData = new AutoCompleteStringCollection();
 
-                con.Open();
-
-                SqlDataReader rd = cmd.ExecuteReader();
-
-                while (rd.Read())
-
+                foreach (DataRow row in dt.Rows)
                 {
-
-                    namesData.Add(rd["PartName"].ToString());
-
-                    if (rd["PartNumber"] != DBNull.Value)
-
-                        numbersData.Add(rd["PartNumber"].ToString());
-
+                    namesData.Add(row["PartName"].ToString());
+                    if (row["PartNumber"] != DBNull.Value)
+                        numbersData.Add(row["PartNumber"].ToString());
                 }
 
+                txtPartName.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                txtPartName.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                txtPartName.AutoCompleteCustomSource = namesData;
+
+                txtPartNumber.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                txtPartNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                txtPartNumber.AutoCompleteCustomSource = numbersData;
             }
-
-
-
-
-            txtPartName.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-
-            txtPartName.AutoCompleteSource = AutoCompleteSource.CustomSource;
-
-            txtPartName.AutoCompleteCustomSource = namesData;
-
-
-
-
-            txtPartNumber.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-
-            txtPartNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
-
-            txtPartNumber.AutoCompleteCustomSource = numbersData;
-
-
-
-
-
+            catch (Exception ex)
+            {
+                MessageBox.Show("خطأ في تحميل الإكمال التلقائي: " + ex.Message);
+            }
         }
-
-        void UpdateAutoCompleteByCategory(int catID)
-
-
+        private async Task UpdateAutoCompleteByCategoryAsync(int catID)
         {
 
-
-            AutoCompleteStringCollection filteredData = new AutoCompleteStringCollection();
-
-            using (SqlConnection con = new SqlConnection(connString))
-
+            try
             {
-                string sql = "SELECT PartName FROM Parts WHERE CategoryID = @catID and IsDeleted = 0";
+                DataTable dt = await _partRepo.GetPartsByCategoryAsync(catID);
 
-                SqlCommand cmd = new SqlCommand(sql, con);
+                AutoCompleteStringCollection filteredData = new AutoCompleteStringCollection();
 
-                cmd.Parameters.AddWithValue("@catID", catID);
-
-                con.Open();
-
-                SqlDataReader rd = cmd.ExecuteReader();
-
-                while (rd.Read())
-                
-                { 
-                    
-                    filteredData.Add(rd["PartName"].ToString()); 
-
+                foreach (DataRow row in dt.Rows)
+                {
+                    filteredData.Add(row["PartName"].ToString());
                 }
 
-
-
+                txtPartName.AutoCompleteCustomSource = filteredData;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("خطأ في تحميل الإكمال التلقائي: " + ex.Message);
 
             }
-
-
-            txtPartName.AutoCompleteCustomSource = filteredData;
-
-
-
-
-
         }
 
         #endregion
@@ -289,276 +258,86 @@ namespace Auto_Parts_Store
 
         #region User Actions
 
-        private void Add_Click(object sender, EventArgs e)
+        private async void Add_Click(object sender, EventArgs e)
 
         {
 
-            if (string.IsNullOrWhiteSpace(txtPartName.Text))
-
+            if (!ValidationHelper.ValidatePurchaseInput(
+                    txtPartName.Text,
+                    txtPartNumber.Text,
+                    txtPurchasePrice.Text,
+                    Quantity.Value,
+                    cmbCategories.SelectedIndex,
+                    supplierscmb.SelectedIndex,
+                    out string error))
             {
-
-                MessageBox.Show("من فضلك تأكد من كتابة اسم القطعة!", "بيانات ناقصة", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
-                txtPartName.Focus();
-
+                MessageBox.Show(error, "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
-
             }
-
-
-
-            if (string.IsNullOrWhiteSpace(txtPartNumber.Text))
-
-            {
-
-                MessageBox.Show("من فضلك تأكد من كتابة رقم القطعة.", "بيانات ناقصة", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
-                txtPartNumber.Focus();
-
-                return;
-
-            }
-
-
-
-            if (!decimal.TryParse(txtPurchasePrice.Text, out decimal buyPrice) || buyPrice <= 0)
-
-            {
-
-                MessageBox.Show("سعر الشراء غير صحيح! دخل رقم أكبر من صفر.", "غلط في السعر", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                txtPurchasePrice.Focus();
-
-                txtPurchasePrice.SelectAll();
-
-                return;
-
-            }
-
-
-
-            if (Quantity.Value <= 0)
-
-            {
-
-                MessageBox.Show("الكمية لازم تكون 1 على الأقل.", "غلط في الكمية");
-
-                Quantity.Focus();
-
-                return;
-
-            }
-
-
-
-            if (cmbCategories.SelectedIndex <= 0)
-
-            {
-
-                MessageBox.Show("من فضلك اختار فئة القطعة ( مساعدين، فرامل.. إلخ).");
-
-                cmbCategories.Focus();
-
-                cmbCategories.DroppedDown = true;
-
-                return;
-
-            }
-
-            if (supplierscmb.SelectedIndex == -1)
-
-            {
-
-                MessageBox.Show("من فضلك اختر المورد أولاً!", "تنبيه");
-
-                supplierscmb.Focus();
-
-                supplierscmb.DroppedDown = true;
-
-                return;
-
-            }
-
-            if (currentPartID == 0 && !string.IsNullOrWhiteSpace(txtPartName.Text))
-            {
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    SqlCommand cmd = new SqlCommand("SELECT PartID FROM Parts WHERE PartName = @name AND IsDeleted = 0", con);
-                    cmd.Parameters.AddWithValue("@name", txtPartName.Text.Trim());
-                    con.Open();
-                    object res = cmd.ExecuteScalar();
-                    if (res != null) currentPartID = Convert.ToInt32(res);
-                }
-            }
-
-
-            bool isExist = false;
-
-            string partNum = txtPartNumber.Text.Trim();
-
             string partName = txtPartName.Text.Trim();
-
-
+            string partNum = txtPartNumber.Text.Trim();
+            decimal buyPrice = decimal.Parse(txtPurchasePrice.Text);
             int newQty = (int)Quantity.Value;
 
 
+            if (currentPartID == 0 && !string.IsNullOrWhiteSpace(txtPartName.Text))
+            {
+                currentPartID = await _partRepo.GetPartIdByNameAsync(partName);
+            }
+          
+            if (currentPartID == 0)
+            {
+                bool exists = await _partRepo.IsPartNumberExistsAsync(partNum);
+                if (exists)
+                {
+                    MessageBox.Show("رقم القطعة ده مسجل لصنف آخر! ابحث عنه بالرقم أو غير الرقم لو ده صنف جديد.",
+                                    "تنبيه: تكرار رقم قطعة", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    txtPartNumber.Focus();
+                    txtPartNumber.SelectAll();
+                    return;
+                }
+            }
 
+            bool isExist = false;
             foreach (DataGridViewRow row in dgvPurshes.Rows)
 
             {
 
-                if (row.Cells["PartNumberCol"].Value?.ToString() == partNum && row.Cells["PartNameCol"].Value?.ToString() == partName)
-
+                if (row.Cells["PartNumberCol"].Value?.ToString() == partNum &&
+                    row.Cells["PartNameCol"].Value?.ToString() == partName)
                 {
-
-                    int currentQty = Convert.ToInt32(row.Cells[4].Value);
-
+                    int currentQty = Convert.ToInt32(row.Cells["QuantityCol"].Value);
                     int updatedQty = currentQty + newQty;
 
                     row.Cells["QuantityCol"].Value = updatedQty;
-
-                    row.Cells["PurchasePriceCol"].Value = txtPurchasePrice.Text;
-
-
+                    row.Cells["PurchasePriceCol"].Value = buyPrice;
                     row.Cells["SellingPriceCol"].Value = calculatedSellingPrice;
-
-
-
                     row.Cells["TotalCol"].Value = buyPrice * updatedQty;
 
-
-
                     isExist = true;
-
                     break;
-
-                }
+                }   
 
             }
-
 
 
             if (!isExist)
-
             {
-
-                decimal total = buyPrice * newQty;
-
                 dgvPurshes.Rows.Add(
-
                     "",
-
-
                     partNum,
-
                     currentPartID,
-
-                    txtPartName.Text.Trim(),
-
+                    partName,
                     buyPrice,
-
                     calculatedSellingPrice,
-
                     newQty,
-                 
-
-                    total,
-
-                    notestxt.Text.Trim(), 
-                    
+                    buyPrice * newQty,
+                    notestxt.Text.Trim(),
                     cmbCategories.SelectedValue
-
                 );
-                currentPartID = 0;
-
             }
-
-
-
-
-
-
-
-            dgvPurshes.ClearSelection();
-            int lastRowIndex = dgvPurshes.Rows.Count - 1;
-            if (lastRowIndex >= 0)
-            {
-                dgvPurshes.Rows[lastRowIndex].Selected = true;
-                dgvPurshes.FirstDisplayedScrollingRowIndex = lastRowIndex;
-            }
-
-
-            Add.Text = "إضافة للفاتورة";
-            Add.BackColor = Color.ForestGreen; // أو اللون الأصلي بتاعك
-
-
-            UpdateFinalTotals();
-
-            ClearInputFields();
-            RenumberRows();
-
+            PostAddCleanup();
         }
-
-
-
-        void UpdateFinalTotals()
-
-        {
-
-            decimal finalTotal = 0;
-            foreach (DataGridViewRow row in dgvPurshes.Rows)
-            {
-                if (row.Cells["TotalCol"].Value != null)
-                    finalTotal += Convert.ToDecimal(row.Cells["TotalCol"].Value);
-            }
-
-            // عرض الإجمالي الكلي
-            totallbl.Text = finalTotal.ToString("N2");
-
-            // حساب الباقي
-            decimal paid = 0;
-            decimal.TryParse(Paid.Text, out paid); // txtPaid هو تيكست بوكس "المدفوع"
-
-            decimal remainder = finalTotal - paid;
-            Remaining.Text = remainder.ToString("N2"); // lblRemainder هو لابل "الباقي"
-
-            // حركة صايعة: لو الباقي > 0 خلي لونه أحمر عشان تنبه المستخدم
-            Remaining.ForeColor = remainder > 0 ? Color.Red : Color.Green;
-
-        }
-
-
-
-        void ClearInputFields()
-
-        {
-
-            txtPartName.Clear();
-
-            txtPartNumber.Clear();
-
-            txtPurchasePrice.Text = "0";
-
-            calculatedSellingPrice = 0;
-
-
-
-            Quantity.Value = 1;
-
-
-
-            cmbCategories.SelectedIndex = 0;
-
-
-
-            notestxt.Clear();
-
-            txtPartName.Focus();
-
-        }
-
-
-
         private async void savebtn_Click(object sender, EventArgs e)
 
         {
@@ -569,144 +348,60 @@ namespace Auto_Parts_Store
                 return;
             }
 
-            using (SqlConnection conn = new SqlConnection(connString))
+            try
             {
-                conn.Open();
-                SqlTransaction transaction = conn.BeginTransaction();
-                try
+                var header = new InvoiceHeader
                 {
-                    string invQuery = @"INSERT INTO Invoices (Time, PaymentMethod, TotalAmount, UserID, supplierID, invoiceType, paidamount) 
-                                VALUES (GETDATE(), @payMethod, @total, @user, @sup, 'توريد', @paid); 
-                                SELECT SCOPE_IDENTITY();";
+                    PaymentMethod = paymentmethod.Text,
+                    TotalAmount = Convert.ToDecimal(totallbl.Text),
+                    UserID = AuthService.CurrentSession.UserID, 
+                    PaidAmount = string.IsNullOrEmpty(Paid.Text) ? 0 : Convert.ToDecimal(Paid.Text),
+                    SupplierID = (supplierscmb.SelectedValue == null || Convert.ToInt32(supplierscmb.SelectedValue) == 0) ? 9 : Convert.ToInt32(supplierscmb.SelectedValue)
+                };
 
-                    SqlCommand cmdInv = new SqlCommand(invQuery, conn, transaction);
-                    cmdInv.Parameters.AddWithValue("@payMethod", paymentmethod.Text);
-                    cmdInv.Parameters.AddWithValue("@total", Convert.ToDecimal(totallbl.Text));
-                    cmdInv.Parameters.AddWithValue("@user", 2);
-                    int supplierId;
-                    var selectedVal = supplierscmb.SelectedValue;
-                    if (selectedVal == null || selectedVal == DBNull.Value || Convert.ToInt32(selectedVal) == 0)
+                var details = new List<InvoiceDetail>();
+                foreach (DataGridViewRow row in dgvPurshes.Rows)
+                {
+                    if (row.IsNewRow) continue;
+                    details.Add(new InvoiceDetail
                     {
-                        supplierId = 9;
-                    }
-                    else
-                    {
-                        supplierId = Convert.ToInt32(supplierscmb.SelectedValue);
-                    }
-
-                    cmdInv.Parameters.AddWithValue("@sup", supplierId); cmdInv.Parameters.AddWithValue("@paid", string.IsNullOrEmpty(Paid.Text) ? 0 : Convert.ToDecimal(Paid.Text));
-
-                    int lastInvoiceId = Convert.ToInt32(cmdInv.ExecuteScalar());
-                    decimal totalInvoice = Convert.ToDecimal(totallbl.Text);
-                    decimal paidAmount = string.IsNullOrEmpty(Paid.Text) ? 0 : Convert.ToDecimal(Paid.Text);
-                    decimal debt = totalInvoice - paidAmount;
-
-                    if (debt > 0 && supplierscmb.SelectedValue != null && Convert.ToInt32(supplierscmb.SelectedValue) != 0)
-                    {
-               
-                        string updateSupplierQuery = "UPDATE supplieres SET Balance = ISNULL(balance, 0) + @debt WHERE ID = @supID";
-
-                        SqlCommand cmdUpdateSup = new SqlCommand(updateSupplierQuery, conn, transaction);
-                        cmdUpdateSup.Parameters.AddWithValue("@debt", debt);
-                        cmdUpdateSup.Parameters.AddWithValue("@supID", supplierscmb.SelectedValue);
-
-                        cmdUpdateSup.ExecuteNonQuery();
-                    }
-
-                    foreach (DataGridViewRow row in dgvPurshes.Rows)
-                    {
-                        if (row.IsNewRow) continue;
-
-                        int pID = 0;
-                        var cellVal = row.Cells["PartIDCol"].Value;
-
-                        if (cellVal == null || cellVal.ToString() == "0" || string.IsNullOrEmpty(cellVal.ToString()))
-                        {
-                            string partQuery = @"INSERT INTO Parts (PartName, PartNumber, PurchasePrice, SellingPrice, Quantity, MinimumStock, CategoryID) 
-                                        VALUES (@n, @num, @pp, @sp, 0,5, @cat); 
-                                        SELECT SCOPE_IDENTITY();";
-                            SqlCommand cmdP = new SqlCommand(partQuery, conn, transaction);
-                            cmdP.Parameters.AddWithValue("@n", row.Cells["PartNameCol"].Value);
-                            cmdP.Parameters.AddWithValue("@num", row.Cells["PartNumberCol"].Value ?? "");
-                            cmdP.Parameters.AddWithValue("@pp", row.Cells["PurchasePriceCol"].Value);
-                            cmdP.Parameters.AddWithValue("@sp", row.Cells["SellingPriceCol"].Value);
-                            cmdP.Parameters.AddWithValue("@cat", row.Cells["categoryCol"].Value);
-                            pID = Convert.ToInt32(cmdP.ExecuteScalar());
-                        }
-                        else
-                        {
-                            pID = Convert.ToInt32(cellVal);
-                        }
-
-                        // 3. حفظ تفاصيل الفاتورة - هنا بنستخدم الـ pID اللي لسه جايبينه
-                        string detQuery = @"INSERT INTO InvoiceDetails (Quantity, PartPrice, Total, PartID, InvoiceID) 
-                                   VALUES (@qty, @prc, @ttl, @pid, @invid)";
-                        SqlCommand cmdD = new SqlCommand(detQuery, conn, transaction);
-                        cmdD.Parameters.AddWithValue("@qty", row.Cells["QuantityCol"].Value);
-                        cmdD.Parameters.AddWithValue("@prc", row.Cells["PurchasePriceCol"].Value);
-                        cmdD.Parameters.AddWithValue("@ttl", row.Cells["TotalCol"].Value);
-                        cmdD.Parameters.AddWithValue("@pid", pID);
-                        cmdD.Parameters.AddWithValue("@invid", lastInvoiceId);
-                        cmdD.ExecuteNonQuery();
-
-                        // 4. تحديث المخزن
-                        string stockQuery = "UPDATE Parts SET Quantity = Quantity + @qty WHERE PartID = @pid";
-                        SqlCommand cmdS = new SqlCommand(stockQuery, conn, transaction);
-                        cmdS.Parameters.AddWithValue("@qty", row.Cells["QuantityCol"].Value);
-                        cmdS.Parameters.AddWithValue("@pid", pID);
-                        cmdS.ExecuteNonQuery();
-
-                        string transQuery = @"INSERT INTO inventoryTransactions (TransactionsType, Quantity, Date, notes, PartId, userId) 
-                      VALUES (@type, @qty, @date, @note, @pid, @uid)";
-                        SqlCommand cmdTrans = new SqlCommand(transQuery, conn, transaction);
-                        cmdTrans.Parameters.AddWithValue("@type", "توريد"); 
-                        cmdTrans.Parameters.AddWithValue("@qty", row.Cells["QuantityCol"].Value);
-                        cmdTrans.Parameters.AddWithValue("@date", DateTime.Now);
-                        cmdTrans.Parameters.AddWithValue("@note", "فاتورة مشتريات رقم: " + lastInvoiceId);
-                        cmdTrans.Parameters.AddWithValue("@pid", pID);
-                        cmdTrans.Parameters.AddWithValue("@uid", 2); 
-                        cmdTrans.ExecuteNonQuery();
-                    }
-
-                    transaction.Commit();
-                    MessageBox.Show("تم الحفظ بنجاح!");
-                    dgvPurshes.Rows.Clear();
-                    Paid.Text = "0";
-                    totallbl.Text = "0.00";
-                    Remaining.Text = "0.00";
-                    Remaining.ForeColor = Color.Green;
-
-                    // إعادة اختيار أول مورد وطريقة دفع
-                    if (supplierscmb.Items.Count > 0) supplierscmb.SelectedIndex = 0;
-                    if (paymentmethod.Items.Count > 0) paymentmethod.SelectedIndex = 0;
-
-                    ClearInputFields();
-                    txtPartName.Focus();
-
-
-                    if (paidAmount > 0)
-                    {
-                        var safeTrans = new SafeTransaction
-                        {
-                            Amount = paidAmount,
-                            TransactionType = "سحب",
-                            Description = $"دفع لمورد - فاتورة مشتريات رقم {lastInvoiceId}",
-                            UserID = AuthService.CurrentSession.UserID,
-                            TransactionDate = DateTime.Now
-                        };
-                        ISafeRepository _safeRepo =new SafeRepository();
-                        await _safeRepo.AddTransactionAsync(safeTrans);
-                    }
+                        PartID = Convert.ToInt32(row.Cells["PartIDCol"].Value),
+                        PartName = row.Cells["PartNameCol"].Value.ToString(), 
+                        PartNumber = row.Cells["PartNumberCol"].Value?.ToString() ?? "",
+                        PurchasePrice = Convert.ToDecimal(row.Cells["PurchasePriceCol"].Value),
+                        SellingPrice = Convert.ToDecimal(row.Cells["SellingPriceCol"].Value),
+                        Quantity = Convert.ToDecimal(row.Cells["QuantityCol"].Value),
+                        Total = Convert.ToDecimal(row.Cells["TotalCol"].Value),
+                        CategoryID = Convert.ToInt32(row.Cells["categoryCol"].Value)
+                    });
                 }
-                catch (Exception ex)
+
+                bool isSaved = await _purchasesRepository.SavePurchaseInvoiceAsync(header, details);
+
+                if (isSaved)
                 {
-                    transaction.Rollback();
-                    MessageBox.Show("خطأ في الحفظ: " + ex.Message);
+                    if (header.PaidAmount > 0)
+                    {
+                        await _safeRepo.AddTransactionAsync(new SafeTransaction
+                        {
+                            Amount = header.PaidAmount,
+                            TransactionType = "سحب",
+                            Description = $"دفع لمورد - فاتورة مشتريات",
+                            UserID = header.UserID,
+                            TransactionDate = DateTime.Now
+                        });
+                    }
+
+                    MessageBox.Show("تم حفظ الفاتورة وتحديث المخازن بنجاح!", "تم", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ResetFormAfterSave();
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show("خطأ في عملية الحفظ: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
-
-        
+  
 
         #endregion
 
@@ -714,82 +409,68 @@ namespace Auto_Parts_Store
 
         #region Search & Filtering (UX Focus)
 
-        private void txtPartNumber_KeyDown(object sender, KeyEventArgs e)
+        private async void txtPartNumber_KeyDown(object sender, KeyEventArgs e)
 
         {
-
-
-
             if (e.KeyCode == Keys.Enter)
-
             {
-
                 e.SuppressKeyPress = true;
-
-
 
                 if (string.IsNullOrWhiteSpace(txtPartNumber.Text)) return;
 
+                var part = await _partRepo.GetPartByNumberAsync(txtPartNumber.Text.Trim());
 
-
-                using (SqlConnection con = new SqlConnection(connString))
-
+                if (part != null)
                 {
+                    txtPartName.Text = part.PartName;
+                    cmbCategories.SelectedValue = part.CategoryID;
+                    currentPartID = part.PartID;
 
-                    string sql = "SELECT PartID, PartName, CategoryID FROM Parts WHERE PartNumber = @num and IsDeleted = 0";
-
-                    SqlCommand cmd = new SqlCommand(sql, con);
-
-                    cmd.Parameters.AddWithValue("@num", txtPartNumber.Text.Trim());
-
-
-
-                    con.Open();
-
-                    SqlDataReader dr = cmd.ExecuteReader();
-
-
-
-                    if (dr.Read())
-
-                    {
-              
-
-                        txtPartName.Text = dr["PartName"].ToString();
-
-                        cmbCategories.SelectedValue = dr["CategoryID"];
-                        currentPartID = Convert.ToInt32(dr["PartID"]);
-
-
-
-                        txtPurchasePrice.Focus();
-
-                        txtPurchasePrice.SelectAll();
-
-                    }
-
-                    else
-
-                    {
-                        currentPartID = 0;
-
-                        txtPartName.Focus();
-
-                    }
-
+                    txtPurchasePrice.Focus();
+                    txtPurchasePrice.SelectAll();
                 }
-
-                txtPurchasePrice.Focus();
-
-                txtPurchasePrice.SelectAll();
-
+                else
+                {
+                    currentPartID = 0;
+                    txtPartName.Focus();
+                }
             }
 
         }
+        private async void txtPartName_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
 
+                if (string.IsNullOrWhiteSpace(txtPartName.Text)) return;
 
+                var part = await _partRepo.GetPartByNameAsync(txtPartName.Text.Trim());
 
-        private void cmbCategories_SelectedIndexChanged(object sender, EventArgs e)
+                if (part != null)
+                {
+                    currentPartID = part.PartID;
+                    txtPartNumber.Text = part.PartNumber;
+                    cmbCategories.SelectedValue = part.CategoryID;
+
+                    txtPurchasePrice.Focus();
+                    txtPurchasePrice.SelectAll();
+                }
+                else
+                {
+                    currentPartID = 0;
+
+                    SetNextPartNumber();
+
+                    txtPurchasePrice.Text = "0";
+
+                    txtPartNumber.Focus();
+                    txtPartNumber.SelectAll();
+                }
+            }
+        }
+
+        private async void cmbCategories_SelectedIndexChanged(object sender, EventArgs e)
 
         {
 
@@ -799,97 +480,14 @@ namespace Auto_Parts_Store
 
                 if (int.TryParse(cmbCategories.SelectedValue.ToString(), out int catId))
                 {
-                    UpdateAutoCompleteByCategory(catId);
+                    await UpdateAutoCompleteByCategoryAsync(catId);
                 }
 
             }
 
         }
-
-
-
-    
 
         #endregion
-
-
-
-        private void txtPartName_KeyDown(object sender, KeyEventArgs e)
-
-        {
-
-            if (e.KeyCode == Keys.Enter)
-
-            {
-
-                e.SuppressKeyPress = true;
-
-
-
-                if (string.IsNullOrWhiteSpace(txtPartName.Text)) return;
-
-
-
-                using (SqlConnection con = new SqlConnection(connString))
-
-                {
-
-                    string sql = "SELECT PartID, PartNumber, CategoryID FROM Parts WHERE PartName = @name and IsDeleted = 0";
-
-                    SqlCommand cmd = new SqlCommand(sql, con);
-
-                    cmd.Parameters.AddWithValue("@name", txtPartName.Text.Trim());
-
-
-
-                    con.Open();
-
-                    SqlDataReader dr = cmd.ExecuteReader();
-
-
-
-                    if (dr.Read())
-
-                    {
-                        currentPartID = Convert.ToInt32(dr["PartID"]);
-
-                        txtPartNumber.Text = dr["PartNumber"].ToString();
-
-                        cmbCategories.SelectedValue = dr["CategoryID"];
-
-
-
-                        txtPurchasePrice.Focus();
-                        txtPurchasePrice.SelectAll();
-                    }
-
-                    else
-
-                    {
-
-                        SetNextPartNumber();
-
-                        txtPartNumber.SelectAll();
-
-
-
-                        txtPurchasePrice.Text = "0";
-
-
-
-
-                        txtPartNumber.Focus();
-
-                    }
-
-                }
-
-            }
-
-        }
-
-
-
 
 
 
@@ -902,7 +500,7 @@ namespace Auto_Parts_Store
 
             {
 
-                e.SuppressKeyPress = true; // كتم الصوت
+                e.SuppressKeyPress = true; 
 
 
 
@@ -1101,70 +699,21 @@ namespace Auto_Parts_Store
 
         }
 
-        public int GetMaxPartNumberFromDB()
 
+        private async void SetNextPartNumber()
         {
 
-            int maxId = 1000;
-            try
-            {
-                using (SqlConnection con = new SqlConnection(connString))
-                {
-                    string query = "SELECT ISNULL(MAX(CAST(PartNumber AS INT)), 1000) FROM Parts WHERE ISNUMERIC(PartNumber) = 1 and IsDeleted = 0";
-                    SqlCommand cmd = new SqlCommand(query, con);
-                    con.Open();
-                    object result = cmd.ExecuteScalar();
-                    if (result != DBNull.Value)
-                    {
-                        maxId = Convert.ToInt32(result);
-                    }
-                }
-            }
-            catch { /* هيرجع الـ 1000 الافتراضية */ }
-            return maxId;
-        }
+            string maxDBStr = await _partRepo.GetPartNumberAsync();
+            int maxDB = int.Parse(maxDBStr) - 1;
 
-        
-
-        void SetNextPartNumber()
-
-        {
-
-            // 1. نجيب أكبر رقم من الداتا بيز
-
-            int maxDB = GetMaxPartNumberFromDB();
-
-
-
-            // 2. نجيب أكبر رقم موجود في الجدول الحالي (DGV)
-
-            int maxGrid = 0;
-
-            foreach (DataGridViewRow row in dgvPurshes.Rows)
-
-            {
-
-                if (row.Cells["PartNumberCol"].Value != null)
-
-                {
-
-                    if (int.TryParse(row.Cells["PartNumberCol"].Value.ToString(), out int currentNum))
-
-                    {
-
-                        if (currentNum > maxGrid) maxGrid = currentNum;
-
-                    }
-
-                }
-
-            }
-
-
-
+            int maxGrid = dgvPurshes.Rows.Cast<DataGridViewRow>()
+                .Where(r => r.Cells["PartNumberCol"].Value != null)
+                .Select(r => {
+                    int.TryParse(r.Cells["PartNumberCol"].Value.ToString(), out int num);
+                    return num;
+                }).DefaultIfEmpty(0).Max();
 
             int finalMax = Math.Max(maxDB, maxGrid);
-
             txtPartNumber.Text = (finalMax + 1).ToString();
 
         }
@@ -1248,42 +797,20 @@ namespace Auto_Parts_Store
         }
         void SetupGrid()
         {
-            dgvPurshes.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(238, 239, 249);
-            dgvPurshes.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvPurshes.ApplyCustomStyle();
+            dgvPurshes.AddIdColumn();
 
-            // تنسيق الهيدر (العناوين)
-            dgvPurshes.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(20, 25, 72);
-            dgvPurshes.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dgvPurshes.ColumnHeadersHeight = 35;
-            dgvPurshes.EnableHeadersVisualStyles = false;
-
-            // جعل الخط واضح وكبير شوية
-            dgvPurshes.DefaultCellStyle.Font = new Font("Segoe UI", 10);
-            dgvPurshes.RowTemplate.Height = 30;
-
-            // منع المستخدم من إضافة سطور يدوياً (الإضافة من فوق بس)
-            dgvPurshes.AllowUserToAddRows = false;
-            dgvPurshes.AllowUserToDeleteRows = false;
-
-            // جعل الأعمدة تاخد مساحة الـ Grid كلها بالتساوي
-            dgvPurshes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-
-            DataGridViewButtonColumn btnDelete = new DataGridViewButtonColumn();
-            btnDelete.Name = "btnDelete";
-            btnDelete.HeaderText = "حذف";
-            btnDelete.Text = "❌";
-            btnDelete.UseColumnTextForButtonValue = true;
-            btnDelete.Width = 50;
-            btnDelete.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            dgvPurshes.Columns.Add(btnDelete);
-            if (!dgvPurshes.Columns.Contains("ID_Col"))
+            if (!dgvPurshes.Columns.Contains("btnDelete"))
             {
-                DataGridViewTextBoxColumn idCol = new DataGridViewTextBoxColumn();
-                idCol.Name = "ID_Col";
-                idCol.HeaderText = "م"; // اختصار مسلسل
-                idCol.ReadOnly = true;
-                idCol.Width = 40;
-                dgvPurshes.Columns.Insert(0, idCol); // يضيفه أول عمود على اليمين (لو RTL مفعل)
+                DataGridViewButtonColumn btnDelete = new DataGridViewButtonColumn();
+                btnDelete.Name = "btnDelete";
+                btnDelete.HeaderText = "حذف";
+                btnDelete.Text = "❌";
+                btnDelete.UseColumnTextForButtonValue = true;
+                btnDelete.Width = 50;
+                btnDelete.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+
+                dgvPurshes.Columns.Add(btnDelete);
             }
         }
 
@@ -1298,7 +825,7 @@ namespace Auto_Parts_Store
                     if (result == DialogResult.Yes)
                     {
                         dgvPurshes.Rows.Remove(dgvPurshes.CurrentRow);
-                        UpdateFinalTotals(); // تحديث الإجمالي الكلي للفاتورة بعد الحذف
+                        UpdateFinalTotals(); 
                     }
                 }
             }
@@ -1319,7 +846,6 @@ namespace Auto_Parts_Store
             {
                 DataGridViewRow row = dgvPurshes.Rows[e.RowIndex];
 
-                // سحب البيانات
                 txtPartNumber.Text = row.Cells["PartNumberCol"].Value.ToString();
                 txtPartName.Text = row.Cells["PartNameCol"].Value.ToString();
                 txtPurchasePrice.Text = row.Cells["PurchasePriceCol"].Value.ToString();
@@ -1328,14 +854,12 @@ namespace Auto_Parts_Store
                 notestxt.Text = row.Cells["notesCol"].Value.ToString();
                 cmbCategories.SelectedValue = row.Cells["categoryCol"].Value;
 
-                // حذف السطر
                 dgvPurshes.Rows.RemoveAt(e.RowIndex);
                 UpdateFinalTotals();
                 RenumberRows();
 
                 txtPartName.Focus();
 
-                // 2. تفعيل وضع التعديل (القفل)
                 Add.Text = "تحديث (Update)";
                 Add.BackColor = Color.Orange;
 
