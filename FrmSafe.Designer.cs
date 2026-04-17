@@ -170,7 +170,6 @@
             // label3
             // 
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.Snow;
             this.label3.Location = new System.Drawing.Point(242, 46);
@@ -178,7 +177,7 @@
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(131, 32);
             this.label3.TabIndex = 2;
-            this.label3.Text = "💰 الخزينة  ";
+            this.label3.Text = "💰 الرصيد";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblBalance
@@ -188,7 +187,7 @@
             this.lblBalance.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblBalance.Location = new System.Drawing.Point(9, 32);
             this.lblBalance.Name = "lblBalance";
-            this.lblBalance.Size = new System.Drawing.Size(200, 53);
+            this.lblBalance.Size = new System.Drawing.Size(233, 53);
             this.lblBalance.TabIndex = 0;
             this.lblBalance.Text = "00.00";
             this.lblBalance.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

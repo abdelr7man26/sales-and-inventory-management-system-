@@ -38,6 +38,7 @@ namespace Auto_Parts_Store
                 return;
             }
 
+
             SetDefaultUIState();
             await LoadDataAndRefreshUI();
         }
@@ -58,7 +59,7 @@ namespace Auto_Parts_Store
         private void SetDefaultUIState()
         {
             from.Value = DateTime.Now.Date;
-            to.Value = DateTime.Now;
+            to.Value = DateTime.Now.Date.AddDays(1).AddTicks(-1);
             rbWithdraw.Checked = true;
             txtAmount.Focus();
         }
@@ -66,14 +67,13 @@ namespace Auto_Parts_Store
         {
             try
             {
-                // الـ Scalability هنا في استخدام الـ Task.WhenAll لتشغيل العمليتين بالتوازي
                 var balanceTask = _safeRepo.GetSafeBalanceAsync();
                 var historyTask = _safeRepo.GetSafeTransactionsHistoryAsync();
 
                 await Task.WhenAll(balanceTask, historyTask);
 
-                lblBalance.Text = balanceTask.Result.ToString("N2");
-                _allTransactions = historyTask.Result; // تخزين البيانات للفلترة السريعة
+                UpdateDailyBalanceLabel();
+                _allTransactions = historyTask.Result; 
 
                 ApplyFilter();
             }
@@ -82,17 +82,59 @@ namespace Auto_Parts_Store
                 HandleError("فشل تحميل البيانات", ex);
             }
         }
+        private void UpdateDailyBalanceLabel()
+        {
+            if (_allTransactions == null) return;
+
+            string filter = string.Format("التاريخ >= #{0:MM/dd/yyyy}# AND التاريخ <= #{1:MM/dd/yyyy} 23:59:59#",
+                                           DateTime.Now.Date, DateTime.Now.Date);
+
+            var todayRows = _allTransactions.Select(filter);
+            decimal dailyBalance = 0;
+
+            foreach (var row in todayRows)
+            {
+                decimal amount = Convert.ToDecimal(row["المبلغ"]);
+                string type = row["النوع"].ToString(); 
+                dailyBalance += (type == "إيداع" ? amount : -amount);
+            }
+
+            lblBalance.Text = dailyBalance.ToString("C2"); 
+        }
         private void ApplyFilter()
         {
             if (_allTransactions == null) return;
 
-            // Performance: الفلترة هنا بتتم في الرامات (RAM) مش في الداتابيز
             DataView dv = _allTransactions.DefaultView;
-            dv.RowFilter = string.Format("التاريخ >= #{0:MM/dd/yyyy} 00:00:00# AND التاريخ <= #{1:MM/dd/yyyy} 23:59:59#",
-                                         from.Value, to.Value);
-
+            string filterString = string.Format("التاريخ >= #{0:MM/dd/yyyy} 00:00:00# AND التاريخ <= #{1:MM/dd/yyyy} 23:59:59#",
+                                                from.Value, to.Value);
+            dv.RowFilter = filterString;
             dgvSafeHistory.DataSource = dv;
+            CalculateFilteredBalance(dv);
             FormatGridColumns();
+        }
+        private void CalculateFilteredBalance(DataView dv)
+        {
+            decimal totalIn = 0;
+            decimal totalOut = 0;
+
+            foreach (DataRowView rowView in dv)
+            {
+                DataRow row = rowView.Row;
+                decimal amount = Convert.ToDecimal(row["المبلغ"]);
+                string type = row["النوع"].ToString(); 
+
+                if (type == "إيداع")
+                    totalIn += amount;
+                else if (type == "سحب")
+                    totalOut += amount;
+            }
+
+            decimal netBalance = totalIn - totalOut;
+
+            lblBalance.Text = netBalance.ToString("N2");
+
+            lblBalance.ForeColor = netBalance >= 0 ? System.Drawing.Color.LimeGreen : System.Drawing.Color.Red;
         }
         private async Task ExecuteSaveTransaction(decimal amount, string reason)
         {
