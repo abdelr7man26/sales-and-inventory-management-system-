@@ -25,8 +25,6 @@ namespace Auto_Parts_Store
 
     {
 
-        string connString = @"Server=DESKTOP-21OI6J7; Database=AutoPartsStoreDB; Integrated Security=True;";
-
         private readonly IPartRepository _partRepo;
         private readonly IPersonRepository _personRepo;
         private readonly IPurchasesRepository _purchasesRepository;
