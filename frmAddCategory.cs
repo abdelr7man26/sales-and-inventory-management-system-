@@ -74,7 +74,7 @@ namespace Auto_Parts_Store
 
                 MessageBox.Show("تم إضافة الفئة بنجاح", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                this.DialogResult = DialogResult.OK;
+                //this.DialogResult = DialogResult.OK;
                 await LoadGridAsync(); 
             }
             catch (Exception ex)
@@ -94,7 +94,7 @@ namespace Auto_Parts_Store
                 {
                     await _repo.DeleteCategoryAsync(selectedCatID);
                     MessageBox.Show("تم حذف الفئة بنجاح");
-                    this.DialogResult = DialogResult.OK;
+                   // this.DialogResult = DialogResult.OK;
                     await LoadGridAsync();
                 }
                 catch (Exception ex)
@@ -112,7 +112,7 @@ namespace Auto_Parts_Store
             {
                 await _repo.UpdateCategoryAsync(selectedCatID, textBox1.Text.Trim());
                 MessageBox.Show("تم تحديث اسم الفئة بنجاح");
-                this.DialogResult = DialogResult.OK;
+               //ش this.DialogResult = DialogResult.OK;
                 await LoadGridAsync();
             }
             catch (Exception ex)
@@ -162,23 +162,22 @@ namespace Auto_Parts_Store
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            if (isResetting) return; // لا تفعل شيئاً إذا كان التغيير بسبب ResetUI
+            if (isResetting) return; 
 
             if (dgvcategories.DataSource is DataTable dt)
             {
                 string filterText = textBox1.Text.Trim().Replace("'", "''");
                 dt.DefaultView.RowFilter = string.IsNullOrEmpty(filterText) ? "" : $"categoryName LIKE '%{filterText}%'";
 
-                // لو لقى تطابق تام
                 bool matchFound = false;
                 foreach (DataRowView rowView in dt.DefaultView)
                 {
                     if (rowView["categoryName"].ToString().Equals(filterText, StringComparison.OrdinalIgnoreCase))
                     {
                         selectedCatID = Convert.ToInt32(rowView["categoryID"]);
-                        button1.Enabled = false; // اخفاء الاضافة
-                        button2.Enabled = true;  // تفعيل الحذف
-                        button3.Enabled = true;  // تفعيل التعديل
+                        button1.Enabled = false; 
+                        button2.Enabled = true;  
+                        button3.Enabled = true;  
                         matchFound = true;
                         break;
                     }
@@ -203,7 +202,7 @@ namespace Auto_Parts_Store
             {
                 e.CellStyle.SelectionBackColor = Color.DodgerBlue;
                 e.CellStyle.SelectionForeColor = Color.White;
-                e.CellStyle.BackColor = Color.DodgerBlue; // إجبار اللون حتى لو فيه AlternatingStyle
+                e.CellStyle.BackColor = Color.DodgerBlue; 
                 e.CellStyle.ForeColor = Color.White;
             }
         }

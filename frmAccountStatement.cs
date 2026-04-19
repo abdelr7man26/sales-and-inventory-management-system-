@@ -52,16 +52,36 @@ namespace Auto_Parts_Store
 
         private void CalculateTotals()
         {
-            decimal tMdin = 0, tDain = 0;
+            decimal totalInvoices = 0;    
+            decimal totalReturns = 0;    
+            decimal totalPaidCash = 0;  
+            decimal totalReceivedFromReturn = 0;
+
+
             foreach (DataRow row in _dtMain.Rows)
             {
-                tMdin += row["مدفوع"] != DBNull.Value ? Convert.ToDecimal(row["مدفوع"]) : 0;
-                tDain += row["اجمالي"] != DBNull.Value ? Convert.ToDecimal(row["اجمالي"]) : 0;
+                totalInvoices += Convert.ToDecimal(row["قيمة الفاتورة"] ?? 0);
+                totalReturns += Convert.ToDecimal(row["قيمة المرتجع"] ?? 0);
+                totalPaidCash += Convert.ToDecimal(row["المدفوع كاش"] ?? 0);
+                totalReceivedFromReturn += Convert.ToDecimal(row["مدفوع من مرتجع"] ?? 0);
             }
 
-            total.Text = tMdin.ToString("N2");
-            Mdin.Text = tDain.ToString("N2");
-            yden.Text = (tMdin - tDain).ToString("N2");
+            lblTotalAccount.Text = totalInvoices.ToString("N2");
+            returns.Text = totalReturns.ToString("N2");
+            lblTotalPaid.Text = totalPaidCash.ToString("N2");
+            recieved.Text = totalReceivedFromReturn.ToString("N2");
+
+            decimal netGoods = totalInvoices - totalPaidCash;
+            lblFinalBalance.Text = netGoods.ToString("N2");
+
+            decimal netreturn = totalReturns - totalReceivedFromReturn;
+            returnsfinal.Text = netreturn.ToString("N2"); 
+
+            decimal finalBalance = netGoods - netreturn;
+
+            final.Text = finalBalance.ToString("N2");
+
+            this.final.ForeColor = finalBalance <= 0 ? Color.Green : Color.Red;
         }
 
         private async void button1_Click(object sender, EventArgs e)
@@ -75,14 +95,37 @@ namespace Auto_Parts_Store
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"كشف حساب: {_targetName}");
-            sb.AppendLine($"إجمالي: {total.Text} | مدفوع: {Mdin.Text} | متبقي: {yden.Text}");
-            sb.AppendLine("--------------------------------------------------");
+            sb.AppendLine($"الفترة من: {From.Value:yyyy/MM/dd} إلى: {To.Value:yyyy/MM/dd}");
+            sb.AppendLine("------------------------------------------------------------------");
+
+            sb.AppendLine(string.Format("{0,-12} | {1,-15} | {2,-10} | {3,-10} | {4,-10} | {5,-10}",
+                "التاريخ", "المصدر", "الفاتورة", "مدفوع", "مرتجع", "م.مرتجع"));
+            sb.AppendLine("------------------------------------------------------------------");
 
             foreach (DataRow row in _dtMain.Rows)
-                sb.AppendLine($"{row["التاريخ"]:dd/MM} | {row["المصدر"]} رقم {row["رقم"]} | المتبقي: {row["المتبقي"]}");
-            MessageBox.Show(sb.ToString(), "معاينة الطباعة");
+            {
+                string date = Convert.ToDateTime(row["التاريخ"]).ToString("dd/MM/yyyy");
+                string source = row["المصدر"].ToString();
+                string invAmount = Convert.ToDecimal(row["قيمة الفاتورة"]).ToString("N0");
+                string invPaid = Convert.ToDecimal(row["المدفوع كاش"]).ToString("N0");
+                string retAmount = Convert.ToDecimal(row["قيمة المرتجع"]).ToString("N0");
+                string retPaid = Convert.ToDecimal(row["مدفوع من مرتجع"]).ToString("N0");
+
+                sb.AppendLine(string.Format("{0,-12} | {1,-15} | {2,-10} | {3,-10} | {4,-10} | {5,-10}",
+                    date, source, invAmount, invPaid, retAmount, retPaid));
+            }
+
+            sb.AppendLine("------------------------------------------------------------------");
+            sb.AppendLine($"إجمالي الفواتير: {lblTotalAccount.Text}  |  المدفوع منها: {lblTotalPaid.Text}");
+            sb.AppendLine($"إجمالي المرتجعات: {returns.Text}  |  المستلم منها: {recieved.Text}");
+            sb.AppendLine("------------------------------------------------------------------");
+            sb.AppendLine($"صافي الفواتير: {lblFinalBalance.Text}");
+            sb.AppendLine($"صافي المرتجعات: {returnsfinal.Text}");
+            sb.AppendLine($"الرصيد النهائي المطلوب: {final.Text}");
+
+            MessageBox.Show(sb.ToString(), "معاينة كشف الحساب قبل الطباعة");
         }
-        
+
 
 
 
@@ -135,5 +178,7 @@ namespace Auto_Parts_Store
             NameLBL.Visible = !showDetails;
             label1.Visible = !showDetails;
         }
+
+ 
     }
 }

@@ -222,7 +222,7 @@ namespace Auto_Parts_Store.Repositories
         public async Task<decimal> GetStockBalanceAsync(int partId)
         {
             string query = @"SELECT ISNULL(SUM(CASE 
-                                WHEN TransactionsType IN ('توريد', 'مرتجع مبيعات') THEN Quantity
+                                WHEN TransactionsType IN ('توريد', 'مرتجع بيع') THEN Quantity
                                 WHEN TransactionsType IN ('صرف مبيعات', 'مرتجع مشتريات') THEN -Quantity
                                 ELSE 0 END), 0) 
                              FROM inventoryTransactions 
@@ -250,43 +250,33 @@ namespace Auto_Parts_Store.Repositories
         {
             string query = @"
                      SELECT 
-                         i.ID AS [رقم],
-                         CAST(i.Time AS DATE) AS [التاريخ],
-                         'فاتورة ' + i.invoiceType AS [المصدر],
-                         CASE 
-                             WHEN i.invoiceType = 'بيع' THEN i.TotalAmount 
-                             WHEN i.invoiceType = 'توريد' THEN i.paidamount
-                         END AS [مدفوع],
-                         CASE 
-                             WHEN i.invoiceType = 'بيع' THEN i.paidamount 
-                             WHEN i.invoiceType = 'توريد' THEN i.TotalAmount 
-                         END AS [اجمالي],
-                         (i.TotalAmount - i.paidamount) AS [المتبقي]
-                     FROM Invoices i
-                     WHERE (i.customerID = @id OR i.supplierID = @id)
-                       AND CAST(i.Time AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
+                        CAST(i.ID AS INT) AS [رقم],
+                        CAST(i.Time AS DATE) AS [التاريخ],
+                        'فاتورة ' + i.invoiceType AS [المصدر],
+                        CAST(i.TotalAmount AS DECIMAL(18,2)) AS [قيمة الفاتورة],
+                        CAST(i.paidamount AS DECIMAL(18,2)) AS [المدفوع كاش],
+                        CAST(0 AS DECIMAL(18,2)) AS [قيمة المرتجع],
+                        CAST(0 AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
+                    FROM Invoices i
+                    WHERE (i.customerID = @id OR i.supplierID = @id)
+                    AND CAST(i.Time AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
+                    
+                    UNION ALL
+                    
+                    SELECT 
+                        CAST(r.ReturnID AS INT) AS [رقم],
+                        CAST(r.ReturnDate AS DATE) AS [التاريخ],
+                        'مرتجع ' + i.invoiceType AS [المصدر],
+                       CAST(0 AS DECIMAL(18,2)) AS [قيمة الفاتورة],
+                       CAST(0 AS DECIMAL(18,2)) AS [المدفوع كاش],
+                       CAST(r.TotalRefundedAmount AS DECIMAL(18,2)) AS [قيمة المرتجع],
+                       CAST(r.CashReturned AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
+                    FROM Returns r
+                    INNER JOIN Invoices i ON r.InvoiceID = i.ID
+                    WHERE (i.customerID = @id OR i.supplierID = @id)
+                    AND CAST(r.ReturnDate AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
 
-                     UNION ALL
-
-                     SELECT 
-                         r.ReturnID AS [رقم],
-                         CAST(r.ReturnDate AS DATE) AS [التاريخ],
-                         'مرتجع ' + i.invoiceType AS [المصدر],
-                         CASE 
-                             WHEN i.invoiceType = 'بيع' THEN 0
-                             WHEN i.invoiceType = 'توريد' THEN r.TotalRefundedAmount 
-                         END AS [مدفوع],
-                         CASE 
-                             WHEN i.invoiceType = 'بيع' THEN r.TotalRefundedAmount
-                             WHEN i.invoiceType = 'توريد' THEN 0
-                         END AS [اجمالي],
-                         0 AS [المتبقي]
-                     FROM Returns r
-                     INNER JOIN Invoices i ON r.InvoiceID = i.ID
-                     WHERE (i.customerID = @id OR i.supplierID = @id)
-                       AND CAST(r.ReturnDate AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
-                     
-                     ORDER BY [التاريخ] ASC, [رقم] ASC";
+                    ORDER BY [التاريخ] ASC";
             
             SqlParameter[] parameters =
             {
@@ -313,7 +303,7 @@ namespace Auto_Parts_Store.Repositories
             else 
             {
                 query = @"SELECT p.PartName AS [اسم الصنف], p.PartNumber AS [رقم الصنف], 
-                         rd.Quantity AS [الكمية المرتجعة], rd.RefundAmount AS [الإجمالي]
+                         rd.Quantity AS [الكمية المرتجعة], (rd.RefundAmount / rd.Quantity) AS [السعر] , rd.RefundAmount AS [الإجمالي]
                   FROM ReturnDetails rd 
                   INNER JOIN Parts p ON rd.PartID = p.PartID 
                   WHERE rd.ReturnID = @id";

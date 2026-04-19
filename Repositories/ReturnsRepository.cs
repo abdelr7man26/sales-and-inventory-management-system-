@@ -87,112 +87,134 @@ namespace Auto_Parts_Store.Repositories
             }
             return details;
         }
-        public async Task<bool> SaveReturnTransactionAsync(ReturnHeaderDTO header, List<ReturnDetailDTO> details)
-        {
-            using (SqlConnection connection = DbHelper.GetConnection())
+            public async Task<bool> SaveReturnTransactionAsync(ReturnHeaderDTO header, List<ReturnDetailDTO> details)
             {
-                await connection.OpenAsync();
-                using (SqlTransaction transaction = connection.BeginTransaction())
+                using (SqlConnection connection = DbHelper.GetConnection())
                 {
-                    try
+                    await connection.OpenAsync();
+                    using (SqlTransaction transaction = connection.BeginTransaction())
                     {
-                        string returnQuery = @"INSERT INTO Returns (InvoiceID, ReturnDate, PaymentMethod, TotalRefundedAmount, UserID, Notes) 
-                                     VALUES (@invId, GETDATE(), @payMethod, @total, @userId, @notes);
-                                     SELECT SCOPE_IDENTITY();";
-
-                        SqlCommand cmd = new SqlCommand(returnQuery, connection, transaction);
-                        cmd.Parameters.AddWithValue("@invId", header.InvoiceID);
-                        cmd.Parameters.AddWithValue("@payMethod", header.PaymentMethod);
-                        cmd.Parameters.AddWithValue("@total", header.TotalAmount);
-                        cmd.Parameters.AddWithValue("@userId", header.UserID);
-                        cmd.Parameters.AddWithValue("@notes", (object)header.Notes ?? DBNull.Value);
-
-                        int returnId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-
-                        foreach (var item in details)
+                        try
                         {
-                            string detailQuery = @"INSERT INTO ReturnDetails (ReturnID, PartID, Quantity, RefundAmount) 
-                                         VALUES (@retId, @partId, @qty, @amount)";
-                            SqlCommand cmdDet = new SqlCommand(detailQuery, connection, transaction);
-                            cmdDet.Parameters.AddWithValue("@retId", returnId);
-                            cmdDet.Parameters.AddWithValue("@partId", item.PartID);
-                            cmdDet.Parameters.AddWithValue("@qty", item.Quantity);
-                            cmdDet.Parameters.AddWithValue("@amount", item.RefundAmount);
-                            await cmdDet.ExecuteNonQueryAsync();
+                             string balanceQuery = (header.ReturnType == "بيع")
+                                         ? "SELECT Balance FROM customers WHERE ID = (SELECT customerID FROM Invoices WHERE ID = @invId)"
+                                         : "SELECT Balance FROM supplieres WHERE ID = (SELECT supplierID FROM Invoices WHERE ID = @invId)";
 
-                            decimal qtyForLog = item.Quantity;
+                             decimal currentTotalBalance = 0;
+                             using (SqlCommand cmdBalInfo = new SqlCommand(balanceQuery, connection, transaction))
+                             {
+                                 cmdBalInfo.Parameters.AddWithValue("@invId", header.InvoiceID);
+                                 currentTotalBalance = Convert.ToDecimal(await cmdBalInfo.ExecuteScalarAsync() ?? 0);
+                             }
 
-                            decimal qtyForUpdateParts = (header.ReturnType == "بيع") ? item.Quantity : -item.Quantity;
+                             decimal returnAmount = header.TotalAmount; 
+                             decimal amountToReduceFromBalance = 0;
+                             decimal amountToReturnFromSafe = 0;
+                             
+                             if (header.PaymentMethod == "كاش")
+                             {
+                                 if (currentTotalBalance > 0)
+                                 {
+                                     amountToReduceFromBalance = Math.Min(returnAmount, currentTotalBalance);
+                                     amountToReturnFromSafe = returnAmount - amountToReduceFromBalance;
+                                 }
+                                 else
+                                 {
+                                     amountToReturnFromSafe = returnAmount;
+                                 }
+                             }
 
-                            string invTransQuery = @"
-                            INSERT INTO inventoryTransactions (PartId, Quantity, TransactionsType, Date, notes, userId) 
-                            VALUES (@pId, @qtyLog, @type, GETDATE(), @note, @uId);
 
-                            UPDATE Parts SET Quantity = Quantity + @qtyUpdate WHERE PartID = @pId";
+                             string returnQuery = @"INSERT INTO Returns (InvoiceID, ReturnDate, PaymentMethod, TotalRefundedAmount, CashReturned, UserID, Notes) 
+                                    VALUES (@invId, GETDATE(), @payMethod, @total, @cashRet, @userId, @notes);
+                                    SELECT SCOPE_IDENTITY();";
 
-                            SqlCommand cmdInv = new SqlCommand(invTransQuery, connection, transaction);
-                            cmdInv.Parameters.AddWithValue("@pId", item.PartID);
-                            cmdInv.Parameters.AddWithValue("@qtyLog", qtyForLog);          
-                            cmdInv.Parameters.AddWithValue("@qtyUpdate", qtyForUpdateParts); 
-                            cmdInv.Parameters.AddWithValue("@type", "مرتجع " + header.ReturnType);
-                            cmdInv.Parameters.AddWithValue("@note", "مرتجع رقم: " + returnId);
-                            cmdInv.Parameters.AddWithValue("@uId", header.UserID);
+                             SqlCommand cmd = new SqlCommand(returnQuery, connection, transaction);
+                             cmd.Parameters.AddWithValue("@invId", header.InvoiceID);
+                             cmd.Parameters.AddWithValue("@payMethod", header.PaymentMethod);
+                             cmd.Parameters.AddWithValue("@total", header.TotalAmount);
+                             cmd.Parameters.AddWithValue("@cashRet", amountToReturnFromSafe); 
+                             cmd.Parameters.AddWithValue("@userId", header.UserID);
+                             cmd.Parameters.AddWithValue("@notes", (object)header.Notes ?? DBNull.Value);
 
-                            await cmdInv.ExecuteNonQueryAsync();
+                             int returnId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+                             foreach (var item in details)
+                             {
+                                 string detailQuery = @"INSERT INTO ReturnDetails (ReturnID, PartID, Quantity, RefundAmount) 
+                                              VALUES (@retId, @partId, @qty, @amount)";
+                                 SqlCommand cmdDet = new SqlCommand(detailQuery, connection, transaction);
+                                 cmdDet.Parameters.AddWithValue("@retId", returnId);
+                                 cmdDet.Parameters.AddWithValue("@partId", item.PartID);
+                                 cmdDet.Parameters.AddWithValue("@qty", item.Quantity);
+                                 cmdDet.Parameters.AddWithValue("@amount", item.RefundAmount);
+                                 await cmdDet.ExecuteNonQueryAsync();
+
+                                 decimal qtyForLog = item.Quantity;
+                                 decimal qtyForUpdateParts = (header.ReturnType == "بيع") ? item.Quantity : -item.Quantity;
+
+                                 string invTransQuery = @"
+                                            INSERT INTO inventoryTransactions (PartId, Quantity, TransactionsType, Date, notes, userId) 
+                                            VALUES (@pId, @qtyLog, @type, GETDATE(), @note, @uId);
+
+                                            UPDATE Parts SET Quantity = Quantity + @qtyUpdate WHERE PartID = @pId";
+
+                                 SqlCommand cmdInv = new SqlCommand(invTransQuery, connection, transaction);
+                                 cmdInv.Parameters.AddWithValue("@pId", item.PartID);
+                                 cmdInv.Parameters.AddWithValue("@qtyLog", qtyForLog);          
+                                 cmdInv.Parameters.AddWithValue("@qtyUpdate", qtyForUpdateParts); 
+                                 cmdInv.Parameters.AddWithValue("@type", "مرتجع " + header.ReturnType);
+                                 cmdInv.Parameters.AddWithValue("@note", "مرتجع رقم: " + returnId);
+                                 cmdInv.Parameters.AddWithValue("@uId", header.UserID);
+
+                                 await cmdInv.ExecuteNonQueryAsync();
+                             }
+
+
+                             decimal totalToDeductFromBalance = (header.PaymentMethod == "كاش") ? amountToReduceFromBalance : returnAmount;
+                             if (totalToDeductFromBalance > 0)
+                             {
+                                 string updateBalQuery = (header.ReturnType == "بيع")
+                                     ? "UPDATE customers SET Balance = Balance - @amt WHERE ID = (SELECT customerID FROM Invoices WHERE ID = @invId)"
+                                     : "UPDATE supplieres SET Balance = Balance - @amt WHERE ID = (SELECT supplierID FROM Invoices WHERE ID = @invId)";
+                             
+                                 using (SqlCommand cmdUpdateBal = new SqlCommand(updateBalQuery, connection, transaction))
+                                 {
+                                     cmdUpdateBal.Parameters.AddWithValue("@amt", totalToDeductFromBalance);
+                                     cmdUpdateBal.Parameters.AddWithValue("@invId", header.InvoiceID);
+                                     await cmdUpdateBal.ExecuteNonQueryAsync();
+                                 }
+                             }
+
+                             if (amountToReturnFromSafe > 0)
+                             {
+                                 string safeQuery = @"INSERT INTO SafeTransactions (Amount, TransactionType, Description, TransactionDate, UserID, InvoiceID) 
+                                      VALUES (@amt, @type, @desc, GETDATE(), @uId, @invId)";
+                             
+                                 string safeTransType = (header.ReturnType == "بيع") ? "سحب" : "إيداع";
+                                 using (SqlCommand cmdSafe = new SqlCommand(safeQuery, connection, transaction))
+                                 {
+                                     cmdSafe.Parameters.AddWithValue("@amt", amountToReturnFromSafe);
+                                     cmdSafe.Parameters.AddWithValue("@type", safeTransType);
+                                     cmdSafe.Parameters.AddWithValue("@uId", header.UserID);
+                                     cmdSafe.Parameters.AddWithValue("@invId", header.InvoiceID);
+                                     cmdSafe.Parameters.AddWithValue("@desc", $"مرتجع {header.ReturnType} (تسوية حساب + كاش) - فاتورة {header.InvoiceID}");
+                                     await cmdSafe.ExecuteNonQueryAsync();
+                                 }
+                             }
+                             
+                             transaction.Commit();
+                             return true;
+                    
                         }
-
-                        if (header.PaymentMethod == "كاش")
+                        catch (Exception)
                         {
-                            string safeQuery = @"INSERT INTO SafeTransactions (Amount, TransactionType, Description, TransactionDate, UserID, InvoiceID) 
-                     VALUES (@amt, @type, @desc, GETDATE(), @uId, @invId)";
-
-                         
-                            string safeTransType = (header.ReturnType == "بيع") ? "سحب" : "إيداع";
-
-                            decimal safeAmount = (header.ReturnType == "بيع") ? -header.TotalAmount : header.TotalAmount;
-
-                            SqlCommand cmdSafe = new SqlCommand(safeQuery, connection, transaction);
-                            cmdSafe.Parameters.AddWithValue("@amt", safeAmount);
-                            cmdSafe.Parameters.AddWithValue("@type", safeTransType); 
-
-                            string returnTypeText = (header.ReturnType == "بيع" ? "مبيعات" : "مشتريات");
-                            cmdSafe.Parameters.AddWithValue("@desc", $"مرتجع {returnTypeText} رقم {returnId} - فاتورة أصلية {header.InvoiceID}");
-
-                            cmdSafe.Parameters.AddWithValue("@uId", header.UserID);
-                            cmdSafe.Parameters.AddWithValue("@invId", header.InvoiceID); 
-
-                            await cmdSafe.ExecuteNonQueryAsync();
+                            transaction.Rollback();
+                            throw;
                         }
-
-                        else 
-                        {
-                            string updateBalanceQuery = "";
-                            if (header.ReturnType == "بيع")
-                            {
-                                updateBalanceQuery = "UPDATE customers SET Balance = Balance - @total WHERE ID = (SELECT customerID FROM Invoices WHERE ID = @invId)";
-                            }
-                            else
-                            {
-                                updateBalanceQuery = "UPDATE supplieres SET Balance = Balance - @total WHERE ID = (SELECT supplierID FROM Invoices WHERE ID = @invId)";
-                            }
-
-                            SqlCommand cmdBalance = new SqlCommand(updateBalanceQuery, connection, transaction);
-                            cmdBalance.Parameters.AddWithValue("@total", header.TotalAmount);
-                            cmdBalance.Parameters.AddWithValue("@invId", header.InvoiceID);
-                            await cmdBalance.ExecuteNonQueryAsync();
-                        }
-
-                        transaction.Commit();
-                        return true;
-                    }
-                    catch (Exception)
-                    {
-                        transaction.Rollback();
-                        throw;
                     }
                 }
             }
-        }
     }
 }
 

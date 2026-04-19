@@ -260,17 +260,19 @@ namespace Auto_Parts_Store
 
         {
 
-            if (!ValidationHelper.ValidatePurchaseInput(
-                    txtPartName.Text,
-                    txtPartNumber.Text,
-                    txtPurchasePrice.Text,
-                    Quantity.Value,
-                    cmbCategories.SelectedIndex,
-                    supplierscmb.SelectedIndex,
-                    out string error))
+            string error;
+            if (!ValidationHelper.ValidatePurchaseInput(txtPartName.Text, txtPartNumber.Text, txtPurchasePrice.Text, Quantity.Value, cmbCategories.SelectedIndex, supplierscmb.SelectedIndex, out error))
             {
                 MessageBox.Show(error, "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+
+                if (error.Contains("اسم القطعة")) txtPartName.Focus();
+                else if (error.Contains("رقم القطعة")) txtPartNumber.Focus();
+                else if (error.Contains("سعر الشراء")) txtPurchasePrice.Focus();
+                else if (error.Contains("الكمية")) Quantity.Focus();
+                else if (error.Contains("فئة")) { cmbCategories.Focus(); cmbCategories.DroppedDown = true; }
+                else if (error.Contains("المورد")) { supplierscmb.Focus(); supplierscmb.DroppedDown = true; }
+
+            return;
             }
             string partName = txtPartName.Text.Trim();
             string partNum = txtPartNumber.Text.Trim();
