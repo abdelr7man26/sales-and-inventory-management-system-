@@ -126,25 +126,25 @@
 --)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 --) ON [PRIMARY]
 --GO
---/****** Object:  Table [dbo].[SafeTransactions]    Script Date: 4/13/2026 8:57:28 PM ******/
---SET ANSI_NULLS ON
---GO
---SET QUOTED_IDENTIFIER ON
---GO
---CREATE TABLE [dbo].[SafeTransactions](
---	[ID] [int] IDENTITY(1,1) NOT NULL,
---	[Amount] [decimal](18, 2) NOT NULL,
---	[TransactionType] [nvarchar](50) NULL,
---	[Description] [nvarchar](max) NULL,
---	[TransactionDate] [datetime] NULL,
---	[UserID] [int] NULL,
---	[InvoiceID] [int] NULL,
---PRIMARY KEY CLUSTERED 
---(
---	[ID] ASC
---)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
---) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
---GO
+/****** Object:  Table [dbo].[SafeTransactions]    Script Date: 4/13/2026 8:57:28 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[SafeTransactions](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[Amount] [decimal](18, 2) NOT NULL,
+	[TransactionType] [nvarchar](50) NULL,
+	[Description] [nvarchar](max) NULL,
+	[TransactionDate] [datetime] NULL,
+	[UserID] [int] NULL,
+	[InvoiceID] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
 --/****** Object:  Table [dbo].[supplieres]    Script Date: 4/13/2026 8:57:28 PM ******/
 --SET ANSI_NULLS ON
 --GO
@@ -181,7 +181,7 @@
 --GO
 --ALTER TABLE [dbo].[person] ADD  CONSTRAINT [DF_person_isdeleted]  DEFAULT ((0)) FOR [isdeleted]
 --GO
---ALTER TABLE [dbo].[SafeTransactions] ADD  DEFAULT (getdate()) FOR [TransactionDate]
+ALTER TABLE [dbo].[SafeTransactions] ADD  DEFAULT (getdate()) FOR [TransactionDate]
 --GO
 --ALTER TABLE [dbo].[customers]  WITH CHECK ADD  CONSTRAINT [FK_customers_person] FOREIGN KEY([ID])
 --REFERENCES [dbo].[person] ([ID])
@@ -228,15 +228,15 @@
 --GO
 --ALTER TABLE [dbo].[Parts] CHECK CONSTRAINT [FK_Parts_partscategories]
 --GO
---ALTER TABLE [dbo].[SafeTransactions]  WITH CHECK ADD  CONSTRAINT [FK_Safe_Invoices] FOREIGN KEY([InvoiceID])
---REFERENCES [dbo].[Invoices] ([ID])
+ALTER TABLE [dbo].[SafeTransactions]  WITH CHECK ADD  CONSTRAINT [FK_Safe_Invoices] FOREIGN KEY([InvoiceID])
+REFERENCES [dbo].[Invoices] ([ID])
 --GO
---ALTER TABLE [dbo].[SafeTransactions] CHECK CONSTRAINT [FK_Safe_Invoices]
+ALTER TABLE [dbo].[SafeTransactions] CHECK CONSTRAINT [FK_Safe_Invoices]
 --GO
---ALTER TABLE [dbo].[SafeTransactions]  WITH CHECK ADD  CONSTRAINT [FK_Safe_Users] FOREIGN KEY([UserID])
---REFERENCES [dbo].[Users] ([ID])
+ALTER TABLE [dbo].[SafeTransactions]  WITH CHECK ADD  CONSTRAINT [FK_Safe_Users] FOREIGN KEY([UserID])
+REFERENCES [dbo].[Users] ([ID])
 --GO
---ALTER TABLE [dbo].[SafeTransactions] CHECK CONSTRAINT [FK_Safe_Users]
+ALTER TABLE [dbo].[SafeTransactions] CHECK CONSTRAINT [FK_Safe_Users]
 --GO
 --ALTER TABLE [dbo].[supplieres]  WITH CHECK ADD  CONSTRAINT [FK_supplieres_person] FOREIGN KEY([ID])
 --REFERENCES [dbo].[person] ([ID])
@@ -250,20 +250,20 @@
 --GO
 
 
-CREATE TABLE SalesReturns (
-    ReturnID INT PRIMARY KEY IDENTITY(1,1),
-    InvoiceID INT NOT NULL,
-    PartID INT NOT NULL,
-    Quantity INT NOT NULL,
-    RefundAmount DECIMAL(18,2),
-    ReturnDate DATETIME DEFAULT GETDATE(),
-    UserID INT NOT NULL,
-    Notes NVARCHAR(250),
+--CREATE TABLE SalesReturns (
+--    ReturnID INT PRIMARY KEY IDENTITY(1,1),
+--    InvoiceID INT NOT NULL,
+--    PartID INT NOT NULL,
+--    Quantity INT NOT NULL,
+--    RefundAmount DECIMAL(18,2),
+--    ReturnDate DATETIME DEFAULT GETDATE(),
+--    UserID INT NOT NULL,
+--    Notes NVARCHAR(250),
     
-    CONSTRAINT FK_Returns_Invoices FOREIGN KEY (InvoiceID) REFERENCES Invoices(ID),
-    CONSTRAINT FK_Returns_Parts FOREIGN KEY (PartID) REFERENCES Parts(PartID),
-    CONSTRAINT FK_Returns_Users FOREIGN KEY (UserID) REFERENCES Users(ID)
-);
+--    CONSTRAINT FK_Returns_Invoices FOREIGN KEY (InvoiceID) REFERENCES Invoices(ID),
+--    CONSTRAINT FK_Returns_Parts FOREIGN KEY (PartID) REFERENCES Parts(PartID),
+--    CONSTRAINT FK_Returns_Users FOREIGN KEY (UserID) REFERENCES Users(ID)
+--);
 
 
-EXEC sp_rename 'SalesReturns', 'Returns';
+--EXEC sp_rename 'SalesReturns', 'Returns';

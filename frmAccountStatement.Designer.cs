@@ -192,6 +192,7 @@
             // 
             // panel2
             // 
+            this.panel2.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.panel2.Controls.Add(this.print);
             this.panel2.Controls.Add(this.total);
             this.panel2.Controls.Add(this.yden);
@@ -199,7 +200,6 @@
             this.panel2.Controls.Add(this.label6);
             this.panel2.Controls.Add(this.Mdin);
             this.panel2.Controls.Add(this.label4);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(3, 393);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(794, 54);
@@ -221,7 +221,7 @@
             // 
             // total
             // 
-            this.total.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.total.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.total.AutoSize = true;
             this.total.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.total.Location = new System.Drawing.Point(240, 17);
@@ -229,10 +229,11 @@
             this.total.Size = new System.Drawing.Size(49, 21);
             this.total.TabIndex = 8;
             this.total.Text = "00.00";
+            this.total.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // yden
             // 
-            this.yden.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.yden.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.yden.AutoSize = true;
             this.yden.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.yden.Location = new System.Drawing.Point(448, 17);
@@ -240,32 +241,33 @@
             this.yden.Size = new System.Drawing.Size(49, 21);
             this.yden.TabIndex = 7;
             this.yden.Text = "00.00";
+            this.yden.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // label7
             // 
-            this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label7.AutoSize = true;
+            this.label7.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label7.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label7.Location = new System.Drawing.Point(314, 17);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(102, 21);
             this.label7.TabIndex = 5;
             this.label7.Text = "الرصيد النهائي";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // label6
             // 
-            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label6.AutoSize = true;
+            this.label6.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label6.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label6.Location = new System.Drawing.Point(694, 17);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(91, 21);
             this.label6.TabIndex = 3;
             this.label6.Text = "اجمالي مدين";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // Mdin
             // 
-            this.Mdin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Mdin.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.Mdin.AutoSize = true;
             this.Mdin.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Mdin.Location = new System.Drawing.Point(626, 17);
@@ -273,17 +275,18 @@
             this.Mdin.Size = new System.Drawing.Size(49, 21);
             this.Mdin.TabIndex = 2;
             this.Mdin.Text = "00.00";
+            this.Mdin.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // label4
             // 
-            this.label4.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label4.AutoSize = true;
+            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label4.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.Location = new System.Drawing.Point(512, 17);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(86, 21);
             this.label4.TabIndex = 1;
             this.label4.Text = "اجمالي دائن";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // frmAccountStatement
             // 

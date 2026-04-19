@@ -180,6 +180,11 @@ namespace Auto_Parts_Store
             safeForm.ShowDialog();
 
         }
+        private void Returnsbtn_Click(object sender, EventArgs e)
+        {
+            openChildForm(new frmReturns());
+
+        }
 
 
 
@@ -288,6 +293,6 @@ namespace Auto_Parts_Store
             }
         }
 
-     
+       
     }
 }

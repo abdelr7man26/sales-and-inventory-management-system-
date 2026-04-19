@@ -430,7 +430,7 @@ namespace Auto_Parts_Store
                 else
                 {
                     currentPartID = 0;
-                    txtPartName.Focus();
+                    txtPurchasePrice.Focus();
                 }
             }
 
@@ -786,6 +786,7 @@ namespace Auto_Parts_Store
 
                 {
                     MessageBox.Show("يرجى اختيار فئة موجوده في القائمة أو إضافة فئة جديده أولاً.");
+                    cmbCategories.Focus();
                     cmbCategories.DroppedDown = true;
 
                 }

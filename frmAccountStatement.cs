@@ -52,15 +52,16 @@ namespace Auto_Parts_Store
 
         private void CalculateTotals()
         {
-            decimal tInv = 0, tPaid = 0;
+            decimal tMdin = 0, tDain = 0;
             foreach (DataRow row in _dtMain.Rows)
             {
-                tInv += Convert.ToDecimal(row["الإجمالي"]);
-                tPaid += Convert.ToDecimal(row["المدفوع"]);
+                tMdin += row["مدفوع"] != DBNull.Value ? Convert.ToDecimal(row["مدفوع"]) : 0;
+                tDain += row["اجمالي"] != DBNull.Value ? Convert.ToDecimal(row["اجمالي"]) : 0;
             }
-            total.Text = tInv.ToString("N2");
-            Mdin.Text = tPaid.ToString("N2");
-            yden.Text = (tInv - tPaid).ToString("N2");
+
+            total.Text = tMdin.ToString("N2");
+            Mdin.Text = tDain.ToString("N2");
+            yden.Text = (tMdin - tDain).ToString("N2");
         }
 
         private async void button1_Click(object sender, EventArgs e)
@@ -78,8 +79,7 @@ namespace Auto_Parts_Store
             sb.AppendLine("--------------------------------------------------");
 
             foreach (DataRow row in _dtMain.Rows)
-                sb.AppendLine($"{row["التاريخ"]:dd/MM} | فاتورة {row["رقم الفاتورة"]} | {row["المتبقي"]}");
-
+                sb.AppendLine($"{row["التاريخ"]:dd/MM} | {row["المصدر"]} رقم {row["رقم"]} | المتبقي: {row["المتبقي"]}");
             MessageBox.Show(sb.ToString(), "معاينة الطباعة");
         }
         
@@ -92,9 +92,10 @@ namespace Auto_Parts_Store
 
             try
             {
-                int invID = Convert.ToInt32(dgvStatement.Rows[e.RowIndex].Cells["رقم الفاتورة"].Value);
+                int invID = Convert.ToInt32(dgvStatement.Rows[e.RowIndex].Cells["رقم"].Value);
+                string opSource = dgvStatement.CurrentRow.Cells["المصدر"].Value.ToString();
 
-                DataTable dtDetails = await _repo.GetInvoiceDetailsAsync(invID);
+                DataTable dtDetails = await _repo.GetInvoiceDetailsAsync(invID, opSource);
 
                 if (dtDetails != null)
                 {

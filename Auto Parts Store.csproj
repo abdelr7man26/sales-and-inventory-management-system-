@@ -72,6 +72,12 @@
     <Compile Include="frmLogin.Designer.cs">
       <DependentUpon>frmLogin.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmReturns.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmReturns.Designer.cs">
+      <DependentUpon>frmReturns.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrmSafe.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -83,6 +89,7 @@
     <Compile Include="Models\Invoices.cs" />
     <Compile Include="Models\Parts.cs" />
     <Compile Include="Models\Person.cs" />
+    <Compile Include="Models\ReturnDTOs.cs" />
     <Compile Include="Models\SafeTransaction.cs" />
     <Compile Include="Models\Users.cs" />
     <Compile Include="Parts Form.cs">
@@ -108,11 +115,13 @@
     <Compile Include="Repositories\IPartRepository.cs" />
     <Compile Include="Repositories\IPersonRepository.cs" />
     <Compile Include="Repositories\IPurshesesRepository.cs" />
+    <Compile Include="Repositories\IReturnsRepository.cs" />
     <Compile Include="Repositories\ISafeRepository.cs" />
     <Compile Include="Repositories\ISalesRepository.cs" />
     <Compile Include="Repositories\PartRepository.cs" />
     <Compile Include="Repositories\PersonRepository.cs" />
     <Compile Include="Repositories\purchasesRepository.cs" />
+    <Compile Include="Repositories\ReturnsRepository.cs" />
     <Compile Include="Repositories\SafeRepository.cs" />
     <Compile Include="Repositories\SalesRepository.cs" />
     <Compile Include="SellingForm.cs">
@@ -134,6 +143,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmLogin.resx">
       <DependentUpon>frmLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmReturns.resx">
+      <DependentUpon>frmReturns.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmSafe.resx">
       <DependentUpon>FrmSafe.cs</DependentUpon>

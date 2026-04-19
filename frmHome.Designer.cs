@@ -31,11 +31,12 @@
             this.components = new System.ComponentModel.Container();
             this.pnlBar = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.button3 = new System.Windows.Forms.Button();
+            this.settingsbtn = new System.Windows.Forms.Button();
+            this.infosbtn = new System.Windows.Forms.Button();
             this.Safebtn = new System.Windows.Forms.Button();
             this.Purshesbtn = new System.Windows.Forms.Button();
             this.clientsbtn = new System.Windows.Forms.Button();
-            this.infosbtn = new System.Windows.Forms.Button();
+            this.Returnsbtn = new System.Windows.Forms.Button();
             this.homebutton = new System.Windows.Forms.Button();
             this.inventorybtn = new System.Windows.Forms.Button();
             this.sellsbtn = new System.Windows.Forms.Button();
@@ -93,42 +94,58 @@
             // 
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.button3, 0, 7);
+            this.tableLayoutPanel1.Controls.Add(this.settingsbtn, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.infosbtn, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.Safebtn, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.Purshesbtn, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.clientsbtn, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.infosbtn, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.Returnsbtn, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.homebutton, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.inventorybtn, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.sellsbtn, 0, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 8;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.5F));
+            this.tableLayoutPanel1.RowCount = 9;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11.11111F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(200, 582);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
-            // button3
+            // settingsbtn
             // 
-            this.button3.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
-            this.button3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button3.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button3.ForeColor = System.Drawing.Color.White;
-            this.button3.Location = new System.Drawing.Point(3, 507);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(194, 72);
-            this.button3.TabIndex = 11;
-            this.button3.Text = "⚙️ الإعدادات";
-            this.button3.UseVisualStyleBackColor = false;
+            this.settingsbtn.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            this.settingsbtn.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.settingsbtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.settingsbtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.settingsbtn.ForeColor = System.Drawing.Color.White;
+            this.settingsbtn.Location = new System.Drawing.Point(3, 515);
+            this.settingsbtn.Name = "settingsbtn";
+            this.settingsbtn.Size = new System.Drawing.Size(194, 64);
+            this.settingsbtn.TabIndex = 13;
+            this.settingsbtn.Text = "⚙️ الإعدادات";
+            this.settingsbtn.UseVisualStyleBackColor = false;
+            // 
+            // infosbtn
+            // 
+            this.infosbtn.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            this.infosbtn.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.infosbtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.infosbtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.infosbtn.ForeColor = System.Drawing.Color.White;
+            this.infosbtn.Location = new System.Drawing.Point(3, 451);
+            this.infosbtn.Name = "infosbtn";
+            this.infosbtn.Size = new System.Drawing.Size(194, 58);
+            this.infosbtn.TabIndex = 12;
+            this.infosbtn.Text = "📊 تقارير الأرباح";
+            this.infosbtn.UseVisualStyleBackColor = false;
             // 
             // Safebtn
             // 
@@ -137,9 +154,9 @@
             this.Safebtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Safebtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Safebtn.ForeColor = System.Drawing.Color.White;
-            this.Safebtn.Location = new System.Drawing.Point(3, 435);
+            this.Safebtn.Location = new System.Drawing.Point(3, 387);
             this.Safebtn.Name = "Safebtn";
-            this.Safebtn.Size = new System.Drawing.Size(194, 66);
+            this.Safebtn.Size = new System.Drawing.Size(194, 58);
             this.Safebtn.TabIndex = 10;
             this.Safebtn.Text = "💰 الخزينة  ";
             this.Safebtn.UseVisualStyleBackColor = false;
@@ -152,9 +169,9 @@
             this.Purshesbtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Purshesbtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Purshesbtn.ForeColor = System.Drawing.Color.White;
-            this.Purshesbtn.Location = new System.Drawing.Point(3, 219);
+            this.Purshesbtn.Location = new System.Drawing.Point(3, 195);
             this.Purshesbtn.Name = "Purshesbtn";
-            this.Purshesbtn.Size = new System.Drawing.Size(194, 66);
+            this.Purshesbtn.Size = new System.Drawing.Size(194, 58);
             this.Purshesbtn.TabIndex = 9;
             this.Purshesbtn.Text = "📥 فاتورة مشتريات";
             this.Purshesbtn.UseVisualStyleBackColor = false;
@@ -167,27 +184,28 @@
             this.clientsbtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.clientsbtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.clientsbtn.ForeColor = System.Drawing.Color.White;
-            this.clientsbtn.Location = new System.Drawing.Point(3, 291);
+            this.clientsbtn.Location = new System.Drawing.Point(3, 259);
             this.clientsbtn.Name = "clientsbtn";
-            this.clientsbtn.Size = new System.Drawing.Size(194, 66);
+            this.clientsbtn.Size = new System.Drawing.Size(194, 58);
             this.clientsbtn.TabIndex = 7;
             this.clientsbtn.Text = "👥 العملاء / الموردين";
             this.clientsbtn.UseVisualStyleBackColor = false;
             this.clientsbtn.Click += new System.EventHandler(this.clientsbtn_Click);
             // 
-            // infosbtn
+            // Returnsbtn
             // 
-            this.infosbtn.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
-            this.infosbtn.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.infosbtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.infosbtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.infosbtn.ForeColor = System.Drawing.Color.White;
-            this.infosbtn.Location = new System.Drawing.Point(3, 363);
-            this.infosbtn.Name = "infosbtn";
-            this.infosbtn.Size = new System.Drawing.Size(194, 66);
-            this.infosbtn.TabIndex = 8;
-            this.infosbtn.Text = "📊 تقارير الأرباح";
-            this.infosbtn.UseVisualStyleBackColor = false;
+            this.Returnsbtn.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            this.Returnsbtn.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.Returnsbtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.Returnsbtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Returnsbtn.ForeColor = System.Drawing.Color.White;
+            this.Returnsbtn.Location = new System.Drawing.Point(3, 323);
+            this.Returnsbtn.Name = "Returnsbtn";
+            this.Returnsbtn.Size = new System.Drawing.Size(194, 58);
+            this.Returnsbtn.TabIndex = 8;
+            this.Returnsbtn.Text = "↩️ المرتجعات";
+            this.Returnsbtn.UseVisualStyleBackColor = false;
+            this.Returnsbtn.Click += new System.EventHandler(this.Returnsbtn_Click);
             // 
             // homebutton
             // 
@@ -198,7 +216,7 @@
             this.homebutton.ForeColor = System.Drawing.Color.White;
             this.homebutton.Location = new System.Drawing.Point(3, 3);
             this.homebutton.Name = "homebutton";
-            this.homebutton.Size = new System.Drawing.Size(194, 66);
+            this.homebutton.Size = new System.Drawing.Size(194, 58);
             this.homebutton.TabIndex = 0;
             this.homebutton.Text = "🏠 الرئيسية";
             this.homebutton.UseVisualStyleBackColor = false;
@@ -211,9 +229,9 @@
             this.inventorybtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.inventorybtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.inventorybtn.ForeColor = System.Drawing.Color.White;
-            this.inventorybtn.Location = new System.Drawing.Point(3, 75);
+            this.inventorybtn.Location = new System.Drawing.Point(3, 67);
             this.inventorybtn.Name = "inventorybtn";
-            this.inventorybtn.Size = new System.Drawing.Size(194, 66);
+            this.inventorybtn.Size = new System.Drawing.Size(194, 58);
             this.inventorybtn.TabIndex = 1;
             this.inventorybtn.Text = "📦 المخزن (القطع)";
             this.inventorybtn.UseVisualStyleBackColor = false;
@@ -226,9 +244,9 @@
             this.sellsbtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.sellsbtn.Font = new System.Drawing.Font("Tahoma", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.sellsbtn.ForeColor = System.Drawing.Color.White;
-            this.sellsbtn.Location = new System.Drawing.Point(3, 147);
+            this.sellsbtn.Location = new System.Drawing.Point(3, 131);
             this.sellsbtn.Name = "sellsbtn";
-            this.sellsbtn.Size = new System.Drawing.Size(194, 66);
+            this.sellsbtn.Size = new System.Drawing.Size(194, 58);
             this.sellsbtn.TabIndex = 2;
             this.sellsbtn.Text = "🛒 فاتورة مبيعات";
             this.sellsbtn.UseVisualStyleBackColor = false;
@@ -629,8 +647,9 @@
         private System.Windows.Forms.Button Safebtn;
         private System.Windows.Forms.Button Purshesbtn;
         private System.Windows.Forms.Button clientsbtn;
-        private System.Windows.Forms.Button infosbtn;
         private System.Windows.Forms.Timer hideTimer;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button settingsbtn;
+        private System.Windows.Forms.Button infosbtn;
+        private System.Windows.Forms.Button Returnsbtn;
     }
 }

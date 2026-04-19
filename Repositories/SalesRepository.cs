@@ -222,8 +222,8 @@ namespace Auto_Parts_Store.Repositories
         public async Task<decimal> GetStockBalanceAsync(int partId)
         {
             string query = @"SELECT ISNULL(SUM(CASE 
-                                WHEN TransactionsType = 'توريد' THEN Quantity 
-                                WHEN TransactionsType = 'صرف مبيعات' THEN -Quantity 
+                                WHEN TransactionsType IN ('توريد', 'مرتجع مبيعات') THEN Quantity
+                                WHEN TransactionsType IN ('صرف مبيعات', 'مرتجع مشتريات') THEN -Quantity
                                 ELSE 0 END), 0) 
                              FROM inventoryTransactions 
                              WHERE PartId = @pId";
@@ -249,37 +249,79 @@ namespace Auto_Parts_Store.Repositories
         public async Task<DataTable> GetAccountStatementAsync(int personId, DateTime from, DateTime to)
         {
             string query = @"
-        SELECT 
-            Time AS [التاريخ], 
-            ID AS [رقم الفاتورة], 
-            invoiceType AS [النوع], 
-            TotalAmount AS [الإجمالي], 
-            paidamount AS [المدفوع], 
-            (TotalAmount - paidamount) AS [المتبقي]
-        FROM Invoices 
-        WHERE (customerID = @id OR supplierID = @id) 
-          AND CAST(Time AS DATE) BETWEEN @from AND @to
-        ORDER BY Time DESC";
+                     SELECT 
+                         i.ID AS [رقم],
+                         CAST(i.Time AS DATE) AS [التاريخ],
+                         'فاتورة ' + i.invoiceType AS [المصدر],
+                         CASE 
+                             WHEN i.invoiceType = 'بيع' THEN i.TotalAmount 
+                             WHEN i.invoiceType = 'توريد' THEN i.paidamount
+                         END AS [مدفوع],
+                         CASE 
+                             WHEN i.invoiceType = 'بيع' THEN i.paidamount 
+                             WHEN i.invoiceType = 'توريد' THEN i.TotalAmount 
+                         END AS [اجمالي],
+                         (i.TotalAmount - i.paidamount) AS [المتبقي]
+                     FROM Invoices i
+                     WHERE (i.customerID = @id OR i.supplierID = @id)
+                       AND CAST(i.Time AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
 
-            SqlParameter[] parameters = {
-        new SqlParameter("@id", SqlDbType.Int) { Value = personId },
-        new SqlParameter("@from", SqlDbType.Date) { Value = from.Date },
-        new SqlParameter("@to", SqlDbType.Date) { Value = to.Date }
-    };
+                     UNION ALL
+
+                     SELECT 
+                         r.ReturnID AS [رقم],
+                         CAST(r.ReturnDate AS DATE) AS [التاريخ],
+                         'مرتجع ' + i.invoiceType AS [المصدر],
+                         CASE 
+                             WHEN i.invoiceType = 'بيع' THEN 0
+                             WHEN i.invoiceType = 'توريد' THEN r.TotalRefundedAmount 
+                         END AS [مدفوع],
+                         CASE 
+                             WHEN i.invoiceType = 'بيع' THEN r.TotalRefundedAmount
+                             WHEN i.invoiceType = 'توريد' THEN 0
+                         END AS [اجمالي],
+                         0 AS [المتبقي]
+                     FROM Returns r
+                     INNER JOIN Invoices i ON r.InvoiceID = i.ID
+                     WHERE (i.customerID = @id OR i.supplierID = @id)
+                       AND CAST(r.ReturnDate AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
+                     
+                     ORDER BY [التاريخ] ASC, [رقم] ASC";
+            
+            SqlParameter[] parameters =
+            {
+                new SqlParameter("@id", personId),
+                new SqlParameter("@from", from.Date),
+                new SqlParameter("@to", to.Date)
+            };
 
             return await DbHelper.ExecuteQueryAsync(query, parameters);
         }
-        
-        public async Task<DataTable> GetInvoiceDetailsAsync(int invId)
-        {
-            string query = @"SELECT p.PartName AS [اسم القطعة], d.Quantity AS [الكمية], 
-                            d.PartPrice AS [السعر], d.Total AS [الإجمالي]
-                     FROM InvoiceDetails d
-                     INNER JOIN Parts p ON d.PartID = p.PartID
-                     WHERE d.InvoiceID = @invID";
 
-            return await DbHelper.ExecuteQueryAsync(query, new SqlParameter("@invID", invId));
+        public async Task<DataTable> GetInvoiceDetailsAsync(int invId, string type)
+        {
+            string query = "";
+
+            if (type.Contains("فاتورة"))
+            {
+                query = @"SELECT p.PartName AS [اسم الصنف], p.PartNumber AS [رقم الصنف], 
+                         d.Quantity AS [الكمية], d.PartPrice AS [السعر], d.Total AS [الإجمالي]
+                  FROM InvoiceDetails d 
+                  INNER JOIN Parts p ON d.PartID = p.PartID 
+                  WHERE d.InvoiceID = @id";
+            }
+            else 
+            {
+                query = @"SELECT p.PartName AS [اسم الصنف], p.PartNumber AS [رقم الصنف], 
+                         rd.Quantity AS [الكمية المرتجعة], rd.RefundAmount AS [الإجمالي]
+                  FROM ReturnDetails rd 
+                  INNER JOIN Parts p ON rd.PartID = p.PartID 
+                  WHERE rd.ReturnID = @id";
+            }
+
+            return await DbHelper.ExecuteQueryAsync(query, new SqlParameter("@ID", invId));
         }
     }
+    
 
 }

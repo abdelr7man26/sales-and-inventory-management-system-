@@ -32,7 +32,7 @@ namespace Auto_Parts_Store.Repositories
                             new SqlParameter("@paid", header.PaidAmount)));
 
                         decimal debt = header.TotalAmount - header.PaidAmount;
-                        if (debt > 0 && header.SupplierID != 9)
+                        if (debt > 0)
                         {
                             string supQuery = "UPDATE supplieres SET Balance = ISNULL(balance, 0) + @debt WHERE ID = @supID";
                             await DbHelper.ExecuteNonQueryWithTransactionAsync(supQuery, con, trans,
