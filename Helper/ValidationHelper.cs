@@ -60,6 +60,21 @@ namespace Auto_Parts_Store.Helpers
             if (!string.IsNullOrWhiteSpace(person.Phone) && !person.Phone.All(char.IsDigit))
                 throw new Exception("رقم التليفون يجب أن يحتوي على أرقام فقط");
         }
+        public static bool ValidateQuickPay(string amountText, int personId, out decimal amount, out string error)
+        {
+            error = "";
+            if (!decimal.TryParse(amountText, out amount) || amount <= 0)
+            {
+                error = "برجاء إدخال مبلغ صحيح أكبر من صفر";
+                return false;
+            }
+            if (personId <= 0)
+            {
+                error = "برجاء اختيار عميل أو مورد أولاً";
+                return false;
+            }
+            return true;
+        }
 
         public static bool ValidatePurchaseInput(string partName, string partNumber, string priceText, decimal quantity, int categoryIndex, int supplierIndex, out string errorMessage)
         {

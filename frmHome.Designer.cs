@@ -57,6 +57,7 @@
             this.lblTotalPartsCount = new System.Windows.Forms.Label();
             this.lblTotalPartsTitle = new System.Windows.Forms.Label();
             this.pnlContainer = new System.Windows.Forms.Panel();
+            this.btnQuickPay = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.headerpanel = new System.Windows.Forms.Panel();
             this.button1 = new System.Windows.Forms.Button();
@@ -75,6 +76,7 @@
             this.panel6.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.pnlContainer.SuspendLayout();
             this.headerpanel.SuspendLayout();
             this.panel3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvHomeAlerts)).BeginInit();
@@ -452,11 +454,30 @@
             // 
             // pnlContainer
             // 
+            this.pnlContainer.Controls.Add(this.btnQuickPay);
             this.pnlContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlContainer.Location = new System.Drawing.Point(0, 64);
             this.pnlContainer.Name = "pnlContainer";
             this.pnlContainer.Size = new System.Drawing.Size(1319, 518);
             this.pnlContainer.TabIndex = 2;
+            // 
+            // btnQuickPay
+            // 
+            this.btnQuickPay.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnQuickPay.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnQuickPay.BackColor = System.Drawing.Color.Olive;
+            this.btnQuickPay.FlatAppearance.BorderSize = 0;
+            this.btnQuickPay.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.btnQuickPay.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.btnQuickPay.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnQuickPay.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnQuickPay.ForeColor = System.Drawing.Color.White;
+            this.btnQuickPay.Location = new System.Drawing.Point(50, 196);
+            this.btnQuickPay.Name = "btnQuickPay";
+            this.btnQuickPay.Size = new System.Drawing.Size(60, 60);
+            this.btnQuickPay.TabIndex = 3;
+            this.btnQuickPay.Text = "$";
+            this.btnQuickPay.UseVisualStyleBackColor = false;
             // 
             // timer1
             // 
@@ -602,6 +623,7 @@
             this.panel2.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.pnlContainer.ResumeLayout(false);
             this.headerpanel.ResumeLayout(false);
             this.headerpanel.PerformLayout();
             this.panel3.ResumeLayout(false);
@@ -651,5 +673,6 @@
         private System.Windows.Forms.Button settingsbtn;
         private System.Windows.Forms.Button infosbtn;
         private System.Windows.Forms.Button Returnsbtn;
+        private System.Windows.Forms.Button btnQuickPay;
     }
 }

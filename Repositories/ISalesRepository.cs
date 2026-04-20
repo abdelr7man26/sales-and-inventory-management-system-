@@ -13,7 +13,7 @@ namespace Auto_Parts_Store.Repositories
         Task<DataTable> LoadCustomersAsync();
 
         Task<decimal> GetStockBalanceAsync(int partId);
-        Task<DataTable> GetAccountStatementAsync(int personId, DateTime from, DateTime to);
+        Task<DataTable> GetAccountStatementAsync(int personId, DateTime from, DateTime to, string personName);
         Task<DataTable> GetInvoiceDetailsAsync(int invId, string type);
     }
 }

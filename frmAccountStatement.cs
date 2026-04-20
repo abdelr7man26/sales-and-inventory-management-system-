@@ -43,7 +43,7 @@ namespace Auto_Parts_Store
         {
             try
             {
-                _dtMain = await _repo.GetAccountStatementAsync(_targetID, From.Value, To.Value);
+                _dtMain = await _repo.GetAccountStatementAsync(_targetID, From.Value, To.Value, NameLBL.Text);
                 dgvStatement.DataSource = _dtMain;
                 CalculateTotals();
             }
@@ -71,10 +71,10 @@ namespace Auto_Parts_Store
             lblTotalPaid.Text = totalPaidCash.ToString("N2");
             recieved.Text = totalReceivedFromReturn.ToString("N2");
 
-            decimal netGoods = totalInvoices - totalPaidCash;
+            decimal netGoods = totalInvoices - totalReturns;
             lblFinalBalance.Text = netGoods.ToString("N2");
-
-            decimal netreturn = totalReturns - totalReceivedFromReturn;
+            
+            decimal netreturn = totalPaidCash - totalReceivedFromReturn;
             returnsfinal.Text = netreturn.ToString("N2"); 
 
             decimal finalBalance = netGoods - netreturn;

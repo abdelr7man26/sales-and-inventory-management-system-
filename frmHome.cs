@@ -31,6 +31,14 @@ namespace Auto_Parts_Store
             _authService = Service ?? throw new ArgumentNullException(nameof(Service));
             alertsBindingSource = new BindingSource();
             this.DoubleBuffered = true;
+
+            UIHelpers.SetupFloatingButton(btnQuickPay, () => {
+               
+                using (var payForm = new QuickPayForm())
+                {
+                    payForm.ShowDialog();
+                }
+            });
         }
 
         private async void frmHome_Load(object sender, EventArgs e)
@@ -42,7 +50,14 @@ namespace Auto_Parts_Store
             lblCurrentUser.Text = $"المستخدم الحالي: {userName} | الصلاحية: {role}";
             ApplyPermissions();
             await LoadDashboardDataAsync();
-        }
+
+            btnQuickPay.Parent = this;
+            btnQuickPay.BringToFront();
+        } 
+          
+
+
+
         private void ApplyPermissions()
         {
             if (!_authService.IsAdmin())
@@ -125,6 +140,7 @@ namespace Auto_Parts_Store
             pnlContainer.Tag = childForm;
             childForm.BringToFront();
             childForm.Show();
+            btnQuickPay.BringToFront();
         }
         private void SetHomeControlsVisibility(bool isVisible)
         {
@@ -291,6 +307,7 @@ namespace Auto_Parts_Store
                     }
                 }
             }
+
         }
 
        

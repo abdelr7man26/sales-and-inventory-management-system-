@@ -34,7 +34,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="System" />
+    <Reference Include="System">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll</HintPath>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -112,18 +114,26 @@
     <Compile Include="PurshesesForm.Designer.cs">
       <DependentUpon>PurshesesForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="QuickPayForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="QuickPayForm.Designer.cs">
+      <DependentUpon>QuickPayForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Repositories\IPartRepository.cs" />
     <Compile Include="Repositories\IPersonRepository.cs" />
     <Compile Include="Repositories\IPurshesesRepository.cs" />
     <Compile Include="Repositories\IReturnsRepository.cs" />
     <Compile Include="Repositories\ISafeRepository.cs" />
     <Compile Include="Repositories\ISalesRepository.cs" />
+    <Compile Include="Repositories\Itransactionsrepository.cs" />
     <Compile Include="Repositories\PartRepository.cs" />
     <Compile Include="Repositories\PersonRepository.cs" />
     <Compile Include="Repositories\purchasesRepository.cs" />
     <Compile Include="Repositories\ReturnsRepository.cs" />
     <Compile Include="Repositories\SafeRepository.cs" />
     <Compile Include="Repositories\SalesRepository.cs" />
+    <Compile Include="Repositories\transactionsrepository.cs" />
     <Compile Include="SellingForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -164,9 +174,13 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <EmbeddedResource Include="PurshesesForm.resx">
       <DependentUpon>PurshesesForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QuickPayForm.resx">
+      <DependentUpon>QuickPayForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SellingForm.resx">
       <DependentUpon>SellingForm.cs</DependentUpon>
@@ -184,6 +198,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\Screenshot 2026-04-20 004926.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\toppng.com-bright-green-circle-with-white-dollar-1600x1600.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -31,11 +31,18 @@ namespace Auto_Parts_Store.Repositories
         public async Task<DataTable> GetDashboardStatsAsync()
         {
             string query = @"SELECT 
-                         (SELECT COUNT(*) FROM Parts WHERE IsDeleted = 0) as Total,
-                         (SELECT COUNT(*) FROM Parts WHERE Quantity <= MinimumStock AND Quantity > 0 AND IsDeleted = 0) as Low,
-                         (SELECT COUNT(*) FROM Parts WHERE Quantity <= 0 AND IsDeleted = 0) as Out,
-                         (SELECT ISNULL(SUM(TotalAmount), 0) FROM Invoices 
-                          WHERE invoiceType = N'مبيعات' AND CAST(Time AS DATE) = CAST(GETDATE() AS DATE)) as DailySales";
+                                (SELECT COUNT(*) FROM Parts WHERE IsDeleted = 0) as Total,
+                                (SELECT COUNT(*) FROM Parts WHERE Quantity <= MinimumStock AND Quantity > 0 AND IsDeleted = 0) as Low,
+                                (SELECT COUNT(*) FROM Parts WHERE Quantity <= 0 AND IsDeleted = 0) as Out,
+                               (
+                                    (SELECT ISNULL(SUM(TotalAmount), 0) FROM Invoices 
+                                     WHERE invoiceType = N'مبيعات' AND CAST(Time AS DATE) = CAST(GETDATE() AS DATE))
+                                    - 
+                                    (SELECT ISNULL(SUM(r.TotalRefundedAmount), 0) FROM Returns r
+                                     INNER JOIN Invoices i ON r.InvoiceID = i.ID
+                                     WHERE i.invoiceType = N'مبيعات' 
+                                     AND CAST(r.ReturnDate AS DATE) = CAST(GETDATE() AS DATE))
+                                ) as DailySales";
 
             return await DbHelper.ExecuteQueryAsync(query);
         }

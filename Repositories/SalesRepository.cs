@@ -246,7 +246,7 @@ namespace Auto_Parts_Store.Repositories
         // =========================================
 
 
-        public async Task<DataTable> GetAccountStatementAsync(int personId, DateTime from, DateTime to)
+        public async Task<DataTable> GetAccountStatementAsync(int personId, DateTime from, DateTime to, string personName)
         {
             string query = @"
                      SELECT 
@@ -276,13 +276,28 @@ namespace Auto_Parts_Store.Repositories
                     WHERE (i.customerID = @id OR i.supplierID = @id)
                     AND CAST(r.ReturnDate AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
 
+                   UNION ALL
+
+                    SELECT 
+                        CAST(s.ID AS INT) AS [رقم],
+                        CAST(s.TransactionDate AS DATE) AS [التاريخ],
+                        'سداد سريع' AS [المصدر],
+                        CAST(0 AS DECIMAL(18,2)) AS [قيمة الفاتورة],
+                        CAST(CASE WHEN s.Description LIKE N'%تسوية%' THEN 0 ELSE s.Amount END AS DECIMAL(18,2)) AS [المدفوع كاش],
+                        CAST(0 AS DECIMAL(18,2)) AS [قيمة المرتجع],
+                        CAST(CASE WHEN s.Description LIKE N'%تسوية%' THEN s.Amount ELSE 0 END AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
+                    FROM SafeTransactions s
+                    WHERE (s.Description LIKE N'%' + @pName + N'%')
+                    AND CAST(s.TransactionDate AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
+            
                     ORDER BY [التاريخ] ASC";
             
             SqlParameter[] parameters =
             {
                 new SqlParameter("@id", personId),
                 new SqlParameter("@from", from.Date),
-                new SqlParameter("@to", to.Date)
+                new SqlParameter("@to", to.Date),
+                new SqlParameter("@pName", personName)
             };
 
             return await DbHelper.ExecuteQueryAsync(query, parameters);

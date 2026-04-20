@@ -138,7 +138,7 @@ namespace Auto_Parts_Store
         }
         private async Task ExecuteSaveTransaction(decimal amount, string reason)
         {
-            btnSave.Enabled = false; // منع النقرات المتكررة (Double-click protection)
+            btnSave.Enabled = false; 
             try
             {
                 var transaction = new SafeTransaction
@@ -154,7 +154,7 @@ namespace Auto_Parts_Store
 
                 txtAmount.Clear();
                 txtReason.Clear();
-                await LoadDataAndRefreshUI(); // تحديث تلقائي بعد الحفظ
+                await LoadDataAndRefreshUI(); 
                 txtAmount.Focus();
             }
             catch (Exception ex)
