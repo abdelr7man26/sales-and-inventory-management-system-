@@ -186,20 +186,23 @@ namespace Auto_Parts_Store.Repositories
             SqlTransaction trans,
             InvoiceDetail item)
         {
-            string updateStockQuery =
-                "UPDATE Parts SET Quantity = Quantity - @Qty WHERE PartID = @PartID";
+            // Guard against negative stock: the UPDATE targets only rows where
+            // Quantity >= requested amount. If 0 rows are affected the part
+            // is out of stock and we throw before the transaction commits.
+            const string updateStockQuery =
+                "UPDATE Parts SET Quantity = Quantity - @Qty WHERE PartID = @PartID AND Quantity >= @Qty";
 
-            await DbHelper.ExecuteNonQueryWithTransactionAsync(
+            int affected = await DbHelper.ExecuteNonQueryWithTransactionAsync(
                 updateStockQuery,
                 con,
                 trans,
-
-                new SqlParameter("@Qty", SqlDbType.Int)
-                { Value = item.Quantity },
-
-                new SqlParameter("@PartID", SqlDbType.Int)
-                { Value = item.PartID }
+                new SqlParameter("@Qty",    SqlDbType.Int) { Value = item.Quantity },
+                new SqlParameter("@PartID", SqlDbType.Int) { Value = item.PartID }
             );
+
+            if (affected == 0)
+                throw new InvalidOperationException(
+                    $"الكمية المطلوبة ({item.Quantity}) غير متوفرة للقطعة: {item.PartName}");
         }
 
         // =========================================
@@ -210,7 +213,7 @@ namespace Auto_Parts_Store.Repositories
         {
             string query = @"SELECT c.ID, p.PersonName 
                              FROM customers c 
-                             JOIN person p ON c.ID = p.ID where P.isdeleted = 0 and c.ID <> 8";
+                             JOIN person p ON c.ID = p.ID where P.isdeleted = 0";
 
             return await DbHelper.ExecuteQueryAsync(query);
         }
@@ -221,23 +224,19 @@ namespace Auto_Parts_Store.Repositories
 
         public async Task<decimal> GetStockBalanceAsync(int partId)
         {
-            string query = @"SELECT ISNULL(SUM(CASE 
-                                WHEN TransactionsType IN ('توريد', 'مرتجع بيع') THEN Quantity
-                                WHEN TransactionsType IN ('صرف مبيعات', 'مرتجع مشتريات') THEN -Quantity
-                                ELSE 0 END), 0) 
-                             FROM inventoryTransactions 
-                             WHERE PartId = @pId";
+            const string query = @"
+                SELECT ISNULL(SUM(CASE
+                    WHEN TransactionsType IN (N'توريد', N'مرتجع بيع')         THEN Quantity
+                    WHEN TransactionsType IN (N'صرف مبيعات', N'مرتجع مشتريات') THEN -Quantity
+                    ELSE 0 END), 0)
+                FROM inventoryTransactions
+                WHERE PartId = @pId";
 
-            object result = await DbHelper.ExecuteQueryAsync(
+            object result = await DbHelper.ExecuteScalarAsync(
                 query,
                 new SqlParameter("@pId", SqlDbType.Int) { Value = partId });
 
-            DataTable dt = (DataTable)result;
-
-            if (dt.Rows.Count == 0)
-                return 0;
-
-            return Convert.ToDecimal(dt.Rows[0][0]);
+            return result == null || result == DBNull.Value ? 0m : Convert.ToDecimal(result);
         }
 
 
@@ -248,56 +247,58 @@ namespace Auto_Parts_Store.Repositories
 
         public async Task<DataTable> GetAccountStatementAsync(int personId, DateTime from, DateTime to, string personName)
         {
-            string query = @"
-                     SELECT 
-                        CAST(i.ID AS INT) AS [رقم],
-                        CAST(i.Time AS DATE) AS [التاريخ],
-                        'فاتورة ' + i.invoiceType AS [المصدر],
-                        CAST(i.TotalAmount AS DECIMAL(18,2)) AS [قيمة الفاتورة],
-                        CAST(i.paidamount AS DECIMAL(18,2)) AS [المدفوع كاش],
-                        CAST(0 AS DECIMAL(18,2)) AS [قيمة المرتجع],
-                        CAST(0 AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
-                    FROM Invoices i
-                    WHERE (i.customerID = @id OR i.supplierID = @id)
-                    AND CAST(i.Time AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        CAST(r.ReturnID AS INT) AS [رقم],
-                        CAST(r.ReturnDate AS DATE) AS [التاريخ],
-                        'مرتجع ' + i.invoiceType AS [المصدر],
-                       CAST(0 AS DECIMAL(18,2)) AS [قيمة الفاتورة],
-                       CAST(0 AS DECIMAL(18,2)) AS [المدفوع كاش],
-                       CAST(r.TotalRefundedAmount AS DECIMAL(18,2)) AS [قيمة المرتجع],
-                       CAST(r.CashReturned AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
-                    FROM Returns r
-                    INNER JOIN Invoices i ON r.InvoiceID = i.ID
-                    WHERE (i.customerID = @id OR i.supplierID = @id)
-                    AND CAST(r.ReturnDate AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
+            // SafeTransactions now joins on PersonID (FK added in SDatabase.sql migration).
+            // The personName parameter is kept in the signature for UI display only;
+            // it is no longer used in the WHERE clause to prevent name-overlap leakage.
+            const string query = @"
+                SELECT
+                    CAST(i.ID       AS INT)            AS [رقم],
+                    CAST(i.Time     AS DATE)           AS [التاريخ],
+                    N'فاتورة ' + i.invoiceType         AS [المصدر],
+                    CAST(i.TotalAmount   AS DECIMAL(18,2)) AS [قيمة الفاتورة],
+                    CAST(i.paidamount    AS DECIMAL(18,2)) AS [المدفوع كاش],
+                    CAST(0 AS DECIMAL(18,2))           AS [قيمة المرتجع],
+                    CAST(0 AS DECIMAL(18,2))           AS [مدفوع من مرتجع]
+                FROM Invoices i
+                WHERE (i.customerID = @id OR i.supplierID = @id)
+                  AND CAST(i.Time AS DATE) BETWEEN @from AND @to
 
-                   UNION ALL
+                UNION ALL
 
-                    SELECT 
-                        CAST(s.ID AS INT) AS [رقم],
-                        CAST(s.TransactionDate AS DATE) AS [التاريخ],
-                        'سداد سريع' AS [المصدر],
-                        CAST(0 AS DECIMAL(18,2)) AS [قيمة الفاتورة],
-                        CAST(CASE WHEN s.Description LIKE N'%تسوية%' THEN 0 ELSE s.Amount END AS DECIMAL(18,2)) AS [المدفوع كاش],
-                        CAST(0 AS DECIMAL(18,2)) AS [قيمة المرتجع],
-                        CAST(CASE WHEN s.Description LIKE N'%تسوية%' THEN s.Amount ELSE 0 END AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
-                    FROM SafeTransactions s
-                    WHERE (s.Description LIKE N'%' + @pName + N'%')
-                    AND CAST(s.TransactionDate AS DATE) BETWEEN CAST(@from AS DATE) AND CAST(@to AS DATE)
-            
-                    ORDER BY [التاريخ] ASC";
-            
+                SELECT
+                    CAST(r.ReturnID AS INT)                AS [رقم],
+                    CAST(r.ReturnDate AS DATE)             AS [التاريخ],
+                    N'مرتجع ' + i.invoiceType             AS [المصدر],
+                    CAST(0 AS DECIMAL(18,2))               AS [قيمة الفاتورة],
+                    CAST(0 AS DECIMAL(18,2))               AS [المدفوع كاش],
+                    CAST(r.TotalRefundedAmount AS DECIMAL(18,2)) AS [قيمة المرتجع],
+                    CAST(r.CashReturned        AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
+                FROM Returns r
+                INNER JOIN Invoices i ON r.InvoiceID = i.ID
+                WHERE (i.customerID = @id OR i.supplierID = @id)
+                  AND CAST(r.ReturnDate AS DATE) BETWEEN @from AND @to
+
+                UNION ALL
+
+                SELECT
+                    CAST(s.ID AS INT)                      AS [رقم],
+                    CAST(s.TransactionDate AS DATE)        AS [التاريخ],
+                    N'سداد سريع'                           AS [المصدر],
+                    CAST(0 AS DECIMAL(18,2))               AS [قيمة الفاتورة],
+                    CAST(CASE WHEN s.Description LIKE N'%تسوية%' THEN 0 ELSE s.Amount END AS DECIMAL(18,2)) AS [المدفوع كاش],
+                    CAST(0 AS DECIMAL(18,2))               AS [قيمة المرتجع],
+                    CAST(CASE WHEN s.Description LIKE N'%تسوية%' THEN s.Amount ELSE 0 END AS DECIMAL(18,2)) AS [مدفوع من مرتجع]
+                FROM SafeTransactions s
+                WHERE s.PersonID = @id
+                  AND CAST(s.TransactionDate AS DATE) BETWEEN @from AND @to
+
+                ORDER BY [التاريخ] ASC";
+
             SqlParameter[] parameters =
             {
-                new SqlParameter("@id", personId),
+                new SqlParameter("@id",   personId),
                 new SqlParameter("@from", from.Date),
-                new SqlParameter("@to", to.Date),
-                new SqlParameter("@pName", personName)
+                new SqlParameter("@to",   to.Date)
             };
 
             return await DbHelper.ExecuteQueryAsync(query, parameters);

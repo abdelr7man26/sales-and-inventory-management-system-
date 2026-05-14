@@ -48,21 +48,22 @@ namespace Auto_Parts_Store
             string userName = AuthService.CurrentSession?.FullName ?? "غير مسجل";
             string role = AuthService.CurrentSession?.CurrentUserRole ?? "بدون";
             lblCurrentUser.Text = $"المستخدم الحالي: {userName} | الصلاحية: {role}";
+            // Load permissions first so ApplyPermissions sees the full cache
+            await new PermissionService().LoadPermissionsAsync(AuthService.CurrentSession.CurrentUserRole);
             ApplyPermissions();
             await LoadDashboardDataAsync();
-
             btnQuickPay.Parent = this;
             btnQuickPay.BringToFront();
-        } 
-          
-
-
+        }
 
         private void ApplyPermissions()
         {
-            if (!_authService.IsAdmin())
-            {
-            }
+            var ps = new PermissionService();
+            // Hide navigation buttons for users who lack the permission.
+            // Admin always passes HasPermission (bypasses the table check).
+            Safebtn.Visible     = ps.HasPermission("Safe.View");
+            infosbtn.Visible    = ps.HasPermission("Reports.View");
+            settingsbtn.Visible = ps.HasPermission("Settings.View");
         }
 
 
@@ -183,9 +184,7 @@ namespace Auto_Parts_Store
 
         private void clientsbtn_Click(object sender, EventArgs e)
         {
-            IPersonRepository _repo = new PersonRepository();
-
-            openChildForm(new People(_repo));
+            openChildForm(new People(_PersonRepo));
         }
 
         private void Safebtn_Click(object sender, EventArgs e)
@@ -246,7 +245,7 @@ namespace Auto_Parts_Store
             lblDateTime.Text = DateTime.Now.ToString("dd/MM/yyyy  |  hh:mm:ss tt");
 
         }
-        private void lblTodaySalesCount_Click(object sender, EventArgs e)
+        private async void lblTodaySalesCount_Click(object sender, EventArgs e)
         {
 
             if (_authService.IsAdmin()) return;
@@ -261,7 +260,7 @@ namespace Auto_Parts_Store
 
             string password = Microsoft.VisualBasic.Interaction.InputBox("أدخل كلمة المرور (PIN) لعرض المبيعات:", "تحقق من الهوية", "");
 
-            if (_authService.VerifyAdminPin(password))
+            if (await _authService.VerifyAdminPinAsync(password))
             {
                 lblTodaySalesCount.Text = lblTodaySalesCount.Tag.ToString();
                 lblTodaySalesCount.ForeColor = Color.White; 
@@ -310,6 +309,14 @@ namespace Auto_Parts_Store
 
         }
 
-       
+        private void infosbtn_Click(object sender, EventArgs e)
+        {
+            new frmReports().Show();
+        }
+
+        private void settingsbtn_Click(object sender, EventArgs e)
+        {
+            new frmSettings().Show();
+        }
     }
 }

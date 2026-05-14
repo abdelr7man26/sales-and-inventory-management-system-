@@ -34,14 +34,18 @@ namespace Auto_Parts_Store.Repositories
                         new SqlParameter("@amt", transaction.Amount),
                         new SqlParameter("@id", personId));
 
-                    string safeQuery = @"INSERT INTO SafeTransactions (Amount, TransactionType, Description, TransactionDate, UserID) 
-                                    VALUES (@amt, @type, @desc, @date, @uid)";
+                    string safeQuery = @"
+                        INSERT INTO SafeTransactions
+                            (Amount, TransactionType, Description, TransactionDate, UserID, PersonID)
+                        VALUES
+                            (@amt, @type, @desc, @date, @uid, @pid)";
                     await DbHelper.ExecuteNonQueryWithTransactionAsync(safeQuery, con, trans,
-                        new SqlParameter("@amt", transaction.Amount),
+                        new SqlParameter("@amt",  transaction.Amount),
                         new SqlParameter("@type", transaction.TransactionType),
                         new SqlParameter("@desc", transaction.Description),
                         new SqlParameter("@date", transaction.TransactionDate),
-                        new SqlParameter("@uid", transaction.UserID));
+                        new SqlParameter("@uid",  transaction.UserID),
+                        new SqlParameter("@pid",  (object)personId ?? DBNull.Value));
 
                     trans.Commit();
                     return true;

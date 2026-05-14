@@ -53,6 +53,12 @@
     <Compile Include="frmAccountStatement.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmReports.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmAccountStatement.Designer.cs">
       <DependentUpon>frmAccountStatement.cs</DependentUpon>
     </Compile>
@@ -87,12 +93,15 @@
       <DependentUpon>FrmSafe.cs</DependentUpon>
     </Compile>
     <Compile Include="Helper\DBHelper.cs" />
+    <Compile Include="Helper\PasswordHasher.cs" />
     <Compile Include="Helper\ValidationHelper.cs" />
     <Compile Include="Models\Invoices.cs" />
     <Compile Include="Models\Parts.cs" />
     <Compile Include="Models\Person.cs" />
     <Compile Include="Models\ReturnDTOs.cs" />
+    <Compile Include="Models\ReportModels.cs" />
     <Compile Include="Models\SafeTransaction.cs" />
+    <Compile Include="Models\SettingsModels.cs" />
     <Compile Include="Models\Users.cs" />
     <Compile Include="Parts Form.cs">
       <SubType>Form</SubType>
@@ -123,17 +132,23 @@
     <Compile Include="Repositories\IPartRepository.cs" />
     <Compile Include="Repositories\IPersonRepository.cs" />
     <Compile Include="Repositories\IPurshesesRepository.cs" />
+    <Compile Include="Repositories\IReportsRepository.cs" />
     <Compile Include="Repositories\IReturnsRepository.cs" />
     <Compile Include="Repositories\ISafeRepository.cs" />
     <Compile Include="Repositories\ISalesRepository.cs" />
+    <Compile Include="Repositories\ISettingsRepository.cs" />
     <Compile Include="Repositories\Itransactionsrepository.cs" />
+    <Compile Include="Repositories\IUserAdminRepository.cs" />
     <Compile Include="Repositories\PartRepository.cs" />
     <Compile Include="Repositories\PersonRepository.cs" />
     <Compile Include="Repositories\purchasesRepository.cs" />
+    <Compile Include="Repositories\ReportsRepository.cs" />
     <Compile Include="Repositories\ReturnsRepository.cs" />
     <Compile Include="Repositories\SafeRepository.cs" />
     <Compile Include="Repositories\SalesRepository.cs" />
+    <Compile Include="Repositories\SettingsRepository.cs" />
     <Compile Include="Repositories\transactionsrepository.cs" />
+    <Compile Include="Repositories\UserAdminRepository.cs" />
     <Compile Include="SellingForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -141,6 +156,10 @@
       <DependentUpon>SellingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\AuthService.cs" />
+    <Compile Include="Services\ReportsService.cs" />
+    <Compile Include="Services\SettingsService.cs" />
+    <Compile Include="Services\UserAdminService.cs" />
+    <Compile Include="Services\PermissionService.cs" />
     <Compile Include="Helper\UIHelpers.cs" />
     <EmbeddedResource Include="frmAccountStatement.resx">
       <DependentUpon>frmAccountStatement.cs</DependentUpon>
@@ -153,6 +172,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmLogin.resx">
       <DependentUpon>frmLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmReports.resx">
+      <DependentUpon>frmReports.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmReturns.resx">
       <DependentUpon>frmReturns.cs</DependentUpon>

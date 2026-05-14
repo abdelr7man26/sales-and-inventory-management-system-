@@ -106,14 +106,11 @@ namespace Auto_Parts_Store
 
             try {
                 var dt = await _salesRepo.LoadCustomersAsync();
-                DataRow dr = dt.NewRow();
-                dr["ID"] =-1;
-                dr["PersonName"] = "عميل نقدي";
-                dt.Rows.InsertAt(dr, 0);
 
                 custoomername.DataSource = dt;
                 custoomername.DisplayMember = "PersonName";
                 custoomername.ValueMember = "ID";
+                custoomername.SelectedValue = 5;
             }
             catch (Exception ex)
             {

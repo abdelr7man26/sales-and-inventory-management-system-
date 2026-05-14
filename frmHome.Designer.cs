@@ -134,6 +134,7 @@
             this.settingsbtn.TabIndex = 13;
             this.settingsbtn.Text = "⚙️ الإعدادات";
             this.settingsbtn.UseVisualStyleBackColor = false;
+            this.settingsbtn.Click += new System.EventHandler(this.settingsbtn_Click);
             // 
             // infosbtn
             // 
@@ -148,6 +149,7 @@
             this.infosbtn.TabIndex = 12;
             this.infosbtn.Text = "📊 تقارير الأرباح";
             this.infosbtn.UseVisualStyleBackColor = false;
+            this.infosbtn.Click += new System.EventHandler(this.infosbtn_Click);
             // 
             // Safebtn
             // 

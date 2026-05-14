@@ -99,8 +99,14 @@ namespace Auto_Parts_Store.Helpers
             };
 
             btn.MouseUp += (s, e) => {
+                // Use a single reusable timer created once; dispose it when the button is destroyed.
                 Timer t = new Timer { Interval = 100 };
-                t.Tick += (ts, te) => { isDragging = false; t.Stop(); };
+                t.Tick += (ts, te) =>
+                {
+                    isDragging = false;
+                    t.Stop();
+                    t.Dispose();
+                };
                 t.Start();
             };
 

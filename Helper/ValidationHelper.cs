@@ -1,6 +1,7 @@
 ﻿using Auto_Parts_Store.Models;
 using Auto_Parts_Store.Services;
 using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Linq;
 
@@ -29,22 +30,18 @@ namespace Auto_Parts_Store.Helpers
                 throw new Exception("الفئة غير صحيحة");
         }
 
-        public static bool ConfirmAdminAccess(AuthService authService)
+        public static async Task<bool> ConfirmAdminAccessAsync(AuthService authService)
         {
-            if (AuthService.CurrentSession.CurrentUserRole == "Admin")
-            {
+            if (AuthService.CurrentSession?.CurrentUserRole == "Admin")
                 return true;
-            }
 
             string inputPin = Microsoft.VisualBasic.Interaction.InputBox(
                 "هذه العملية تتطلب صلاحية المدير.\nبرجاء إدخال الـ PIN Code الخاص بالإدارة:",
                 "تأكيد صلاحية",
                 "");
 
-            if (authService.VerifyAdminPin(inputPin))
-            {
+            if (await authService.VerifyAdminPinAsync(inputPin))
                 return true;
-            }
 
             MessageBox.Show("الـ PIN الذي أدخلته غير صحيح!", "خطأ أمان", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             return false;

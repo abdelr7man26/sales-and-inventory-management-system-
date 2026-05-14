@@ -25,9 +25,9 @@ namespace Auto_Parts_Store.Helpers
                     DataTable dt = new DataTable();
                     dt.Load(reader);
                     return dt;
-        }
                 }
             }
+        }
 
         public static async Task ExecuteNonQueryAsync(string query, params SqlParameter[] parameters)
         {
@@ -42,21 +42,14 @@ namespace Auto_Parts_Store.Helpers
             }
         }
 
-        public static async Task<object> ExecuteScalarAsync(string query)
-        {
-            using (SqlConnection con = new SqlConnection(connectionString))
-            using (SqlCommand cmd = new SqlCommand(query, con))
-            {
-                await con.OpenAsync();
-                return await cmd.ExecuteScalarAsync();
-            }
-        }
+        // Single overload handles both parameterised and non-parameterised calls.
+        // The no-parameter overload is removed — it encouraged unsafe string-interpolated queries.
         public static async Task<object> ExecuteScalarAsync(string query, params SqlParameter[] parameters)
         {
             using (SqlConnection con = new SqlConnection(connectionString))
             using (SqlCommand cmd = new SqlCommand(query, con))
             {
-                if (parameters != null)
+                if (parameters != null && parameters.Length > 0)
                     cmd.Parameters.AddRange(parameters);
 
                 await con.OpenAsync();

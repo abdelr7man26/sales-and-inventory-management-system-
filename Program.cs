@@ -13,9 +13,10 @@ namespace Auto_Parts_Store
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            PartRepository repo = new PartRepository();
-            AuthService authService = new AuthService(repo);
-            frmLogin loginForm = new frmLogin(authService);
+            var repo     = new PartRepository();
+            var settings = new Auto_Parts_Store.Repositories.SettingsRepository();
+            var authService = new AuthService(repo, settings);
+            var loginForm   = new frmLogin(authService);
 
             Application.Run(loginForm);
         }

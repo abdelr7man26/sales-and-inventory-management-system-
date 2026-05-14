@@ -13,15 +13,28 @@ namespace Auto_Parts_Store.Repositories
         // User Authentication
         // ================================
 
-        public async Task<DataTable> GetUserByCredentialsAsync(string username, string password)
+        public async Task UpgradePasswordHashAsync(int userId, string newHash)
         {
-            string query = @"SELECT u.ID, u.UserName, u.Role, p.PersonName 
-                             FROM Users u INNER JOIN person p ON u.ID = p.ID 
-                             WHERE u.Username = @user AND u.password = @pass AND P.IsDeleted = 0";
+            await DbHelper.ExecuteNonQueryAsync(
+                "UPDATE Users SET password = @hash WHERE ID = @id",
+                new SqlParameter("@hash", newHash),
+                new SqlParameter("@id",   userId));
+        }
+
+        /// <param name="hashedPassword">PBKDF2-SHA256 hash produced by PasswordHasher.Hash()</param>
+        public async Task<DataTable> GetUserByCredentialsAsync(string username, string hashedPassword)
+        {
+            const string query = @"
+                SELECT u.ID, u.UserName, u.Role, p.PersonName
+                FROM   Users  u
+                INNER JOIN person p ON u.ID = p.ID
+                WHERE  u.Username  = @user
+                  AND  u.password  = @pass
+                  AND  p.IsDeleted = 0";
 
             return await DbHelper.ExecuteQueryAsync(query,
                 new SqlParameter("@user", username),
-                new SqlParameter("@pass", password));
+                new SqlParameter("@pass", hashedPassword));
         }
 
         // ================================

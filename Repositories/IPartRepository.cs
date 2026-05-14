@@ -8,6 +8,7 @@ namespace Auto_Parts_Store.Repositories
     public interface IPartRepository
     {
         Task<DataTable> GetUserByCredentialsAsync(string username, string password);
+        Task UpgradePasswordHashAsync(int userId, string newHash);
         Task<DataTable> GetDashboardStatsAsync();
         Task<DataTable> GetLowStockAlertsAsync();
 

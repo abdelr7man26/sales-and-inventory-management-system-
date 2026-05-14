@@ -150,22 +150,11 @@ namespace Auto_Parts_Store
             try
             {
                 DataTable dt = await _personRepo.GetAllPersonsAsync(PersonType.Supplier);
-
-                DataRow[] generalSupplier = dt.Select("ID = 9");
-                foreach (DataRow row in generalSupplier)
-                {
-                    dt.Rows.Remove(row);
-                }
-
-                DataRow dr = dt.NewRow();
-                dr["ID"] = 0;
-                dr["الأسم"] = "مورد نقدي / عام"; 
-                dt.Rows.InsertAt(dr, 0);
-
+                
                 supplierscmb.DataSource = dt;
                 supplierscmb.DisplayMember = "الأسم"; 
                 supplierscmb.ValueMember = "ID";
-                supplierscmb.SelectedValue = -1;
+                supplierscmb.SelectedValue = 4;
             }
             catch (Exception ex)
             {

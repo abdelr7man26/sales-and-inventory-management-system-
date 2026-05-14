@@ -14,8 +14,9 @@ namespace Auto_Parts_Store
     {
         private readonly ISafeRepository _safeRepo;
 
-        static  private readonly IPartRepository _repo = new PartRepository();
-        private readonly AuthService _authService = new AuthService(_repo);
+        static  private readonly IPartRepository     _repo     = new PartRepository();
+        static  private readonly ISettingsRepository _settings = new SettingsRepository();
+        private readonly AuthService _authService = new AuthService(_repo, _settings);
 
         private DataTable _allTransactions;
         
@@ -32,7 +33,7 @@ namespace Auto_Parts_Store
 
         private async void FrmSafe_Load(object sender, EventArgs e)
         {
-            if (!ValidationHelper.ConfirmAdminAccess(_authService))
+            if (!await ValidationHelper.ConfirmAdminAccessAsync(_authService))
             {
                 this.Close();
                 return;
